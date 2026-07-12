@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Outil CLI - Authentification</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+        .box { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .token { background: #eee; padding: 10px; font-family: monospace; word-break: break-all; border-radius: 4px; margin: 20px 0; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>🔑 Votre Access Token Thingiverse</h2>
+        <p>Copiez ce jeton et collez-le dans votre terminal ou vos variables GitLab CI :</p>
+        <div class="token" id="token-display">Recherche du jeton...</div>
+        <button onclick="copyToken()">Copier le jeton</button>
+    </div>
+
+    <script>
+        // On extrait le token de l'URL (ex: #access_token=12345)
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.replace('#', '?'));
+        const token = params.get('access_token');
+
+        if (token) {
+            document.getElementById('token-display').innerText = token;
+        } else {
+            document.getElementById('token-display').innerText = "Aucun jeton trouvé dans l'URL.";
+        }
+
+        function copyToken() {
+            navigator.clipboard.writeText(token);
+            alert("Jeton copié !");
+        }
+    </script>
+</body>
+</html>
