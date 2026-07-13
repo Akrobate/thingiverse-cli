@@ -1,7 +1,7 @@
 # thingiverse-cli
 thingiverse-cli command line tool for upload to thingiverse
 
-# Prototyping thingiverse.json
+## Prototyping thingiverse.json
 
 ```json
 {
@@ -22,3 +22,25 @@ thingiverse-cli command line tool for upload to thingiverse
 }
 ```
 
+## Static page for retrieve token
+
+https://akrobate.github.io/thingiverse-cli/token.html
+
+
+## Development
+
+### Requirements
+
+- Go 1.23 or newer
+
+### Build
+
+```bash
+go build -o thingiverse-cli
+```
+
+### Build and install locally
+
+```bash
+go build -o thingiverse-cli && sudo cp thingiverse-cli /usr/local/bin/
+```
