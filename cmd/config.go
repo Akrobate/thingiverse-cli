@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Akrobate/thingiverse-cli/pkg/configuration"
 	"github.com/spf13/cobra"
 )
 
@@ -19,31 +20,23 @@ Examples:
 	Args: cobra.MaximumNArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		// mgr, err := manager.NewManager()
-		// if err != nil {
-		// 	return fmt.Errorf("failed to initialize manager: %w", err)
-		// }
-
-		// dir, err := os.Getwd()
-		// base := filepath.Base(dir)
-
-		// var pkg manager.Package
-		// pkg.Name = askUser("package name", base)
-		// pkg.Version = askUser("version", "1.0.0")
-		// pkg.Description = askUser("description", "")
-		// pkg.Repository = askUser("repository", "")
-		// pkg.Author = askUser("author", "")
-
-		// if err := mgr.Init(&pkg); err != nil {
-		// 	return fmt.Errorf("failed to install package: %w", err)
-		// }
+		config, err := configuration.NewConfiguration()
+		if err != nil {
+			return fmt.Errorf("failed to initialize configuration: %w", err)
+		}
 
 		client_id := askUser("Client id", "")
 		client_secret := askUser("Client secret", "")
 
-		fmt.Println("Client id : " + client_id)
-		fmt.Println("Client secret : " + client_secret)
+		config.ClientId = client_id
+		config.ClientSecret = client_secret
 
+		err = config.Save()
+		if err != nil {
+			return fmt.Errorf("Failed to save configuration: %w", err)
+		}
+
+		fmt.Println("Credentials saved")
 		return nil
 	},
 }
