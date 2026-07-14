@@ -38,3 +38,28 @@ func askUser(promt string, defaultValue string) string {
 	}
 	return input
 }
+
+func askForConfirmation(prompt string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [Y/n]: ", prompt)
+
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return false
+		}
+
+		input = strings.TrimSpace(strings.ToLower(input))
+
+		if input == "" || input == "y" || input == "yes" {
+			return true
+		}
+
+		if input == "n" || input == "no" {
+			return false
+		}
+
+		fmt.Println("Invalid input, please answer with Yes or No")
+	}
+}
