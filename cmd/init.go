@@ -20,7 +20,7 @@ Examples:
 	Args: cobra.MaximumNArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		thing, err := thing.NewThingParams()
+		thing, err := thing.NewThing()
 		if err != nil {
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}

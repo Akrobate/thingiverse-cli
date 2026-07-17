@@ -17,23 +17,23 @@ type ThingResponse struct {
 	ID int `json:"id"`
 }
 
-type ThingParams struct {
-	Id           string `json:"-" yaml:"id"`
+type Thing struct {
+	Id           int    `json:"-" yaml:"id"`
 	Name         string `json:"name" yaml:"name"`
 	Category     string `json:"category" yaml:"category"`
 	License      string `json:"license" yaml:"license"`
-	IsWip        bool   `json:"is_wip" yaml:"is_wip"`
+	IsWip        int    `json:"is_wip" yaml:"is_wip"`
 	Tags         string `json:"tags" yaml:"tags"`
 	Instructions string `json:"instructions" yaml:"instructions"`
 	Description  string `json:"description" yaml:"description"`
 }
 
-func NewThingParams() (*ThingParams, error) {
+func NewThing() (*Thing, error) {
 
-	return &ThingParams{}, nil
+	return &Thing{}, nil
 }
 
-func (tp *ThingParams) Save() error {
+func (tp *Thing) Save() error {
 	data, err := yaml.Marshal(tp)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (tp *ThingParams) Save() error {
 	return os.WriteFile("./thingiverse.yml", data, 0644)
 }
 
-func (tp *ThingParams) Create(accessToken string) (int, error) {
+func (tp *Thing) Create(accessToken string) (int, error) {
 
 	jsonData, err := json.Marshal(tp)
 	if err != nil {
@@ -76,7 +76,7 @@ func (tp *ThingParams) Create(accessToken string) (int, error) {
 		return 0, fmt.Errorf("Parse response problem : %w", err)
 	}
 
-	tp.Id = fmt.Sprintf("%d", thingResp.ID)
+	tp.Id = thingResp.ID
 
 	return thingResp.ID, nil
 }

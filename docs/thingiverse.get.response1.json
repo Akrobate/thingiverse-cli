@@ -1,0 +1,354 @@
+{
+    "id": 2285753,
+    "name": "Predator digit",
+    "thumbnail": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=1024&h=1024&fit=contain&cbg=white&n=-1",
+    "url": "https://api.thingiverse.com/things/2285753",
+    "public_url": "https://www.thingiverse.com/thing:2285753",
+    "creator": {
+        "id": 1448466,
+        "name": "ArtiomF",
+        "first_name": "Artiom",
+        "last_name": "Fedorov",
+        "url": "https://api.thingiverse.com/users/ArtiomF",
+        "public_url": "https://www.thingiverse.com/ArtiomF",
+        "thumbnail": "https://cdn.thingiverse.com/assets/94/03/74/8c/4d/IMG_20161118_010627-1.jpg",
+        "count_of_followers": 1,
+        "count_of_following": 0,
+        "count_of_downloads": 0,
+        "count_of_designs": 1,
+        "collection_count": 3,
+        "make_count": 10,
+        "accepts_tips": false,
+        "is_following": false,
+        "location": "Paris France ",
+        "cover": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/assets/81/c2/fc/dc/2f/20170430_152325.jpg&w=240&h=180&fit=contain&cbg=white&n=-1",
+        "is_admin": false,
+        "is_moderator": false,
+        "is_featured": false,
+        "is_verified": false,
+        "is_exclusive": false,
+        "membership_level": null
+    },
+    "added": "2017-05-01T00:12:14+00:00",
+    "modified": "2017-05-01T00:12:14+00:00",
+    "is_published": 1,
+    "is_wip": 0,
+    "is_featured": false,
+    "is_nsfw": false,
+    "is_ai": false,
+    "is_winner": false,
+    "is_edu_approved": false,
+    "is_printable": 1,
+    "like_count": 30,
+    "is_liked": false,
+    "collect_count": 32,
+    "is_collected": false,
+    "comment_count": 1,
+    "is_watched": false,
+    "default_image": {
+        "id": 5932922,
+        "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png",
+        "name": "f6b133a283120b5138a8255ef9902649.png",
+        "sizes": [
+            {
+                "type": "thumb",
+                "size": "large",
+                "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png"
+            },
+            {
+                "type": "thumb",
+                "size": "medium",
+                "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png"
+            },
+            {
+                "type": "thumb",
+                "size": "small",
+                "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png"
+            },
+            {
+                "type": "thumb",
+                "size": "tiny",
+                "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png"
+            },
+            {
+                "type": "preview",
+                "size": "featured",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=628&h=472&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "card",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=292&h=219&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "large",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=240&h=180&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "medium",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=200&h=150&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "small",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=124&h=93&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "birdwing",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=320&h=200&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "tiny",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=110&h=80&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "preview",
+                "size": "tinycard",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=55&h=40&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "display",
+                "size": "large",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=1024&h=1024&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "display",
+                "size": "medium",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=968&h=250&fit=contain&cbg=white&n=-1"
+            },
+            {
+                "type": "display",
+                "size": "small",
+                "url": "https://resize.thingiverse.com/?url=https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png&w=292&h=122&fit=contain&cbg=white&n=-1"
+            }
+        ],
+        "added": "2017-05-01T00:14:16+00:00"
+    },
+    "description": "Predator LCD Number Layer.\r\n\r\nSize: 33mm 44mm\r\nHoles: 3mm diameter\r\n\r\nCan represent numbers in predator count system from 0 to 9\r\n\r\n",
+    "instructions": "",
+    "description_html": "<div><p>Predator LCD Number Layer.</p><p>Size: 33mm 44mm<br>Holes: 3mm diameter</p><p>Can represent numbers in predator count system from 0 to 9</p></div>",
+    "instructions_html": "<div></div>",
+    "details": "<div><h1 class=\"thing-component-header summary summary\">Summary</h1><div><p>Predator LCD Number Layer.</p><p>Size: 33mm 44mm<br>Holes: 3mm diameter</p><p>Can represent numbers in predator count system from 0 to 9</p></div></div>",
+    "details_parts": [
+        {
+            "type": "summary",
+            "name": "Summary",
+            "required": "required",
+            "data": [
+                {
+                    "content": "<div><p>Predator LCD Number Layer.</p><p>Size: 33mm 44mm<br>Holes: 3mm diameter</p><p>Can represent numbers in predator count system from 0 to 9</p></div>"
+                }
+            ]
+        },
+        {
+            "type": "settings",
+            "name": "Print Settings"
+        },
+        {
+            "type": "tips",
+            "name": "Post-Printing"
+        },
+        {
+            "type": "design",
+            "name": "How I Designed This"
+        },
+        {
+            "type": "custom",
+            "name": "Custom Section"
+        }
+    ],
+    "edu_details": "",
+    "edu_details_parts": [
+        {
+            "type": "grades",
+            "name": "Grade",
+            "required": "recommended",
+            "save_as_component": false,
+            "template": "taglist_select",
+            "fieldname": "grades",
+            "default": "Choose a range, help teachers see if this is a fit for their class",
+            "opts": {
+                "15": "Kindergarten",
+                "16": "1st Grade",
+                "17": "2nd Grade",
+                "18": "3rd Grade",
+                "19": "4th Grade",
+                "20": "5th Grade",
+                "21": "6th Grade",
+                "22": "7th Grade",
+                "23": "8th Grade",
+                "24": "9th Grade",
+                "25": "10th Grade",
+                "26": "11th Grade",
+                "27": "12th Grade",
+                "28": "Higher Education"
+            }
+        },
+        {
+            "type": "subjects",
+            "name": "Subject",
+            "required": "recommended",
+            "save_as_component": false,
+            "template": "taglist_select",
+            "fieldname": "subjects",
+            "default": "Choose a Subject, Make your project more findable",
+            "opts": {
+                "11": "Science",
+                "12": "Math",
+                "13": "Engineering",
+                "14": "History",
+                "15": "Geography",
+                "16": "Art",
+                "17": "Languages",
+                "18": "Music",
+                "19": "Technology",
+                "20": "Special Ed"
+            }
+        },
+        {
+            "type": "standards",
+            "name": "Standards",
+            "required": "recommended",
+            "save_as_component": false,
+            "template": "taglist_select",
+            "fieldname": "standards",
+            "default": "Choose a Requirement this lesson meets",
+            "opts": {
+                "3": "NGSS",
+                "4": "CCSS"
+            }
+        },
+        {
+            "type": "overview",
+            "name": "Overview and Background",
+            "required": "required"
+        },
+        {
+            "type": "plan",
+            "name": "Lesson Plan and Activity",
+            "required": "required"
+        },
+        {
+            "type": "materials",
+            "name": "Materials Needed",
+            "required": "recommended"
+        },
+        {
+            "type": "skills",
+            "name": "Skills Learned",
+            "label": "Enter each skill and press enter to add it as a tagged skill",
+            "required": false,
+            "template": "taglist",
+            "fieldname": "skills",
+            "default": "Choose Skills",
+            "opts": []
+        },
+        {
+            "type": "duration",
+            "name": "Duration of Lesson",
+            "template": "textfield"
+        },
+        {
+            "type": "prep",
+            "name": "Preparation"
+        },
+        {
+            "type": "assets",
+            "name": "Handouts and Assets",
+            "save_as_component": false,
+            "label": "Upload any files, docs, etc. They will be found under the Files tab on the Thing Page.",
+            "template": "upload"
+        },
+        {
+            "type": "assessment",
+            "name": "Rubric and Assessment"
+        },
+        {
+            "type": "references",
+            "name": "References"
+        }
+    ],
+    "license": "Creative Commons - Attribution",
+    "allows_derivatives": true,
+    "files_url": "https://api.thingiverse.com/things/2285753/files",
+    "images_url": "https://api.thingiverse.com/things/2285753/images",
+    "likes_url": "https://api.thingiverse.com/things/2285753/likes",
+    "ancestors_url": "https://api.thingiverse.com/things/2285753/ancestors",
+    "derivatives_url": "https://api.thingiverse.com/things/2285753/derivatives",
+    "tags_url": "https://api.thingiverse.com/things/2285753/tags",
+    "tags": [
+        {
+            "name": "predator",
+            "tag": "predator",
+            "url": "https://api.thingiverse.com/tags/predator",
+            "count": 494,
+            "things_url": "https://api.thingiverse.com/tags/predator/things",
+            "absolute_url": "/tag:predator"
+        }
+    ],
+    "categories_url": "https://api.thingiverse.com/things/2285753/categories",
+    "file_count": 2,
+    "is_private": 0,
+    "is_purchased": 0,
+    "app_id": null,
+    "download_count": 536,
+    "view_count": 894,
+    "education": {
+        "grades": [],
+        "subjects": []
+    },
+    "remix_count": 0,
+    "make_count": 0,
+    "app_count": 5,
+    "root_comment_count": 1,
+    "moderation": "",
+    "is_derivative": false,
+    "ancestors": [],
+    "type_name": "Thing",
+    "is_banned": false,
+    "is_comments_disabled": false,
+    "needs_moderation": 0,
+    "is_decoy": 0,
+    "zip_data": {
+        "files": [
+            {
+                "name": "predator_digit_v1.stl",
+                "url": "https://cdn.thingiverse.com/assets/9c/52/60/b2/e9/predator_digit_v1.stl"
+            },
+            {
+                "name": "predator_digit_v1_with_holes.stl",
+                "url": "https://cdn.thingiverse.com/assets/b3/68/37/00/08/predator_digit_v1_with_holes.stl"
+            }
+        ],
+        "images": [
+            {
+                "name": "f6b133a283120b5138a8255ef9902649.png",
+                "url": "https://cdn.thingiverse.com/renders/34/ba/3e/60/8b/f6b133a283120b5138a8255ef9902649.png"
+            },
+            {
+                "name": "543de925a2d09e04985097fed11c3a52.png",
+                "url": "https://cdn.thingiverse.com/renders/02/93/4d/f0/f9/543de925a2d09e04985097fed11c3a52.png"
+            },
+            {
+                "name": "one_digit.jpg",
+                "url": "https://cdn.thingiverse.com/assets/cc/7b/49/4b/c6/one_digit.jpg"
+            },
+            {
+                "name": "20170501_023816.jpg",
+                "url": "https://cdn.thingiverse.com/assets/22/09/f7/2e/7f/20170501_023816.jpg"
+            },
+            {
+                "name": "20170501_023732.jpg",
+                "url": "https://cdn.thingiverse.com/assets/97/4c/58/77/08/20170501_023732.jpg"
+            },
+            {
+                "name": "20170501_023724.jpg",
+                "url": "https://cdn.thingiverse.com/assets/df/0c/a6/2e/0e/20170501_023724.jpg"
+            }
+        ]
+    }
+}

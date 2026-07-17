@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Akrobate/thingiverse-cli/pkg/thing"
 	"github.com/spf13/cobra"
 )
 
@@ -26,18 +25,19 @@ Examples:
 			fmt.Println("Access token : " + accessToken)
 		}
 
-		thing, err := thing.NewThingParams()
-		if err != nil {
-			return fmt.Errorf("failed to initialize configuration: %w", err)
-		}
+		fmt.Println(args)
 
-		thing.Save()
+		// thing, err := thing.NewThingParams()
+		// if err != nil {
+		// 	return fmt.Errorf("failed to initialize configuration: %w", err)
+		// }
+		// thing.Save()
 
 		return nil
 	},
 }
 
 func init() {
-	remoteUpdateCmd.Flags().String("access_token", "", "Spécifie directement l'access token de Thingiverse")
+	remoteUpdateCmd.Flags().String("access_token", "", "Access token for thingiverse")
 	remoteCmd.AddCommand(remoteUpdateCmd)
 }
