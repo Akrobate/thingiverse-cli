@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Akrobate/thingiverse-cli/pkg/thing"
 	"github.com/spf13/cobra"
 )
 
@@ -18,20 +19,15 @@ Examples:
 	Args: cobra.MaximumNArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		accessToken, err := cmd.Flags().GetString("access_token")
+		accessToken, err := getAccessToken(cmd)
 		if err != nil {
-			fmt.Println("failed to retrieve access_token flag: %w", err)
-		} else {
-			fmt.Println("Access token : " + accessToken)
+			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
+		// @todo: GET to UPDATE
 		fmt.Println(args)
-
-		// thing, err := thing.NewThingParams()
-		// if err != nil {
-		// 	return fmt.Errorf("failed to initialize configuration: %w", err)
-		// }
-		// thing.Save()
+		resp, err := thing.Get(args[0], accessToken)
+		fmt.Println(resp)
 
 		return nil
 	},

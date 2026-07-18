@@ -19,11 +19,9 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		accessToken, err := cmd.Flags().GetString("access_token")
+		accessToken, err := getAccessToken(cmd)
 		if err != nil {
-			fmt.Println("failed to retrieve access_token flag: %w", err)
-		} else {
-			fmt.Println("Access token : " + accessToken)
+			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
 		fmt.Println(args)

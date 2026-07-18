@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Akrobate/thingiverse-cli/pkg/configuration"
 	"github.com/spf13/cobra"
 )
 
@@ -62,4 +63,31 @@ func askForConfirmation(prompt string) bool {
 
 		fmt.Println("Invalid input, please answer with Yes or No")
 	}
+}
+
+func getAccessToken(cmd *cobra.Command) (string, error) {
+	accessToken, err := cmd.Flags().GetString("access_token")
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve access_token flag: %w", err)
+	}
+
+	if accessToken != "" {
+		return accessToken, nil
+	}
+
+	config, err := configuration.NewConfiguration()
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize configuration: %w", err)
+	}
+
+	if !config.ConfigurationExists() {
+		return "", fmt.Errorf("Unknown client_id, Please run config first")
+	}
+	config.Load()
+
+	if !config.AccessTokenExists() {
+		return "", fmt.Errorf("Access token not in config, run auth")
+	}
+
+	return config.AccessToken, nil
 }

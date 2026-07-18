@@ -86,3 +86,10 @@ func (c *Configuration) ConfigurationExists() bool {
 	}
 	return false
 }
+
+func (c *Configuration) AccessTokenExists() bool {
+	if c.AccessToken == "" {
+		return false
+	}
+	return true
+}
