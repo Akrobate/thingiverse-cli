@@ -12,13 +12,13 @@ type ThingUpdateRequest struct {
 	Name         string   `json:"name" yaml:"name"`
 	Category     string   `json:"category" yaml:"category"`
 	License      string   `json:"license" yaml:"license"`
-	IsWip        int      `json:"is_wip" yaml:"is_wip"`
+	IsWip        bool     `json:"is_wip" yaml:"is_wip"`
 	Tags         []string `json:"tags" yaml:"tags"`
 	Instructions string   `json:"instructions" yaml:"instructions"`
 	Description  string   `json:"description" yaml:"description"`
 }
 
-func Update(id int, tr *ThingUpdateRequest, accessToken string) error {
+func UpdateAPI(id int, tr *ThingUpdateRequest, accessToken string) error {
 
 	jsonData, err := json.Marshal(tr)
 	if err != nil {

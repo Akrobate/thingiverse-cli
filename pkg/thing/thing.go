@@ -13,19 +13,21 @@ import (
 
 const apiBaseURL = "https://api.thingiverse.com"
 
+// Licenses: cc, cc-sa, cc-nd, cc-nc-sa, cc-nc-nd, pd0, gpl, lgpl, bsd
+
 type ThingResponse struct {
 	ID int `json:"id"`
 }
 
 type Thing struct {
-	Id           int    `json:"-" yaml:"id"`
-	Name         string `json:"name" yaml:"name"`
-	Category     string `json:"category" yaml:"category"`
-	License      string `json:"license" yaml:"license"`
-	IsWip        int    `json:"is_wip" yaml:"is_wip"`
-	Tags         string `json:"tags" yaml:"tags"`
-	Instructions string `json:"instructions" yaml:"instructions"`
-	Description  string `json:"description" yaml:"description"`
+	Id           int      `json:"-" yaml:"id"`
+	Name         string   `json:"name" yaml:"name"`
+	Category     string   `json:"category" yaml:"category"`
+	License      string   `json:"license" yaml:"license"`
+	IsWip        bool     `json:"is_wip" yaml:"is_wip"`
+	Tags         []string `json:"tags" yaml:"tags"`
+	Instructions string   `json:"instructions" yaml:"instructions"`
+	Description  string   `json:"description" yaml:"description"`
 }
 
 func NewThing() (*Thing, error) {
@@ -40,6 +42,36 @@ func (tp *Thing) Save() error {
 	}
 
 	return os.WriteFile("./thingiverse.yml", data, 0644)
+}
+
+func (tp *Thing) Load() error {
+	data, err := os.ReadFile("./thingiverse.yml")
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(data, tp)
+}
+
+func (tp *Thing) Update(accessToken string) error {
+
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	updateRequest := ThingUpdateRequest{
+		Name:        tp.Name,
+		Description: tp.Description,
+		IsWip:       tp.IsWip,
+		Tags:        tp.Tags,
+		License:     tp.License,
+	}
+
+	if err := UpdateAPI(tp.Id, &updateRequest, accessToken); err != nil {
+		return fmt.Errorf("Error updating thing\n%w", err)
+	}
+
+	return nil
 }
 
 func (tp *Thing) Create(accessToken string) (int, error) {

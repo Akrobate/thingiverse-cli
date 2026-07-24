@@ -24,10 +24,16 @@ Examples:
 			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
-		// @todo: GET to UPDATE
-		fmt.Println(args)
-		resp, err := thing.Get(args[0], accessToken)
-		fmt.Println(resp)
+		t, err := thing.NewThing()
+		if err != nil {
+			return fmt.Errorf("failed to initialize configuration: %w", err)
+		}
+
+		if err := t.Update(accessToken); err != nil {
+			return err
+		}
+
+		fmt.Println("[OK] Update success")
 
 		return nil
 	},
