@@ -33,6 +33,7 @@ func Get(id string, accessToken string) (*ThingGetResponse, error) {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{}

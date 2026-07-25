@@ -10,7 +10,7 @@ import (
 
 type ThingUpdateRequest struct {
 	Name         string   `json:"name" yaml:"name"`
-	Category     string   `json:"category" yaml:"category"`
+	Category     int      `json:"category" yaml:"category"`
 	License      string   `json:"license" yaml:"license"`
 	IsWip        bool     `json:"is_wip" yaml:"is_wip"`
 	Tags         []string `json:"tags" yaml:"tags"`

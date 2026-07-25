@@ -22,7 +22,7 @@ type ThingResponse struct {
 type Thing struct {
 	Id           int      `json:"-" yaml:"id"`
 	Name         string   `json:"name" yaml:"name"`
-	Category     string   `json:"category" yaml:"category"`
+	Category     int      `json:"category" yaml:"category"`
 	License      string   `json:"license" yaml:"license"`
 	IsWip        bool     `json:"is_wip" yaml:"is_wip"`
 	Tags         []string `json:"tags" yaml:"tags"`
@@ -61,6 +61,7 @@ func (tp *Thing) Update(accessToken string) error {
 
 	updateRequest := ThingUpdateRequest{
 		Name:        tp.Name,
+		Category:    tp.Category,
 		Description: tp.Description,
 		IsWip:       tp.IsWip,
 		Tags:        tp.Tags,
