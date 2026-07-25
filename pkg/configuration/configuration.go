@@ -2,11 +2,12 @@ package configuration
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 )
 
 type Configuration struct {
@@ -77,14 +78,7 @@ func (c *Configuration) GenerateConnectionUrl() string {
 }
 
 func (c *Configuration) ConfigurationExists() bool {
-	_, err := os.Stat(c.configFilePath)
-	if err == nil {
-		return true
-	}
-	if errors.Is(err, os.ErrNotExist) {
-		return false
-	}
-	return false
+	return utils.FileExists(c.configFilePath)
 }
 
 func (c *Configuration) AccessTokenExists() bool {

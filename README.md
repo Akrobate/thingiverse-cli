@@ -52,3 +52,8 @@ go build -o thingiverse-cli
 ```bash
 go build -o thingiverse-cli && sudo cp thingiverse-cli /usr/local/bin/
 ```
+
+
+## Todo
+
+- [ ] Search tags command line

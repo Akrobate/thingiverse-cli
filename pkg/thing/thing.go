@@ -7,27 +7,32 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
+	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
 const apiBaseURL = "https://api.thingiverse.com"
 
-// Licenses: cc, cc-sa, cc-nd, cc-nc-sa, cc-nc-nd, pd0, gpl, lgpl, bsd
-
 type ThingResponse struct {
 	ID int `json:"id"`
 }
 
+type ThingFile struct {
+	LocalPath string `json:"local_path" yaml:"local_path"`
+}
+
 type Thing struct {
-	Id           int      `json:"-" yaml:"id"`
-	Name         string   `json:"name" yaml:"name"`
-	Category     int      `json:"category" yaml:"category"`
-	License      string   `json:"license" yaml:"license"`
-	IsWip        bool     `json:"is_wip" yaml:"is_wip"`
-	Tags         []string `json:"tags" yaml:"tags"`
-	Instructions string   `json:"instructions" yaml:"instructions"`
-	Description  string   `json:"description" yaml:"description"`
+	Id           int         `json:"-" yaml:"id"`
+	Name         string      `json:"name" yaml:"name"`
+	Category     int         `json:"category" yaml:"category"`
+	License      string      `json:"license" yaml:"license"`
+	IsWip        bool        `json:"is_wip" yaml:"is_wip"`
+	Tags         []string    `json:"tags" yaml:"tags"`
+	Instructions string      `json:"instructions" yaml:"instructions"`
+	Description  string      `json:"description" yaml:"description"`
+	Files        []ThingFile `json:"files" yaml:"files"`
 }
 
 func NewThing() (*Thing, error) {
@@ -51,6 +56,86 @@ func (tp *Thing) Load() error {
 	}
 
 	return yaml.Unmarshal(data, tp)
+}
+
+func (tp *Thing) CheckFilesExists() error {
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	for _, item := range tp.Files {
+		if utils.FileExists(item.LocalPath) {
+			fmt.Printf("[OK]\t%s\n", item.LocalPath)
+		} else {
+			fmt.Printf("[ERROR]\t%s\n", item.LocalPath)
+		}
+	}
+
+	return nil
+}
+
+func (tp *Thing) UploadFiles(accessToken string) error {
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	for _, item := range tp.Files {
+		if utils.FileExists(item.LocalPath) {
+
+			filename := filepath.Base(item.LocalPath)
+			creationResponse, err := CreateFileAPI(tp.Id, filename, accessToken)
+			if err != nil {
+				return fmt.Errorf("CreateFileAPI error \n%w", err)
+			}
+
+			err = UploadToS3(creationResponse.Action, creationResponse.Fields, item.LocalPath)
+			if err != nil {
+				return fmt.Errorf("UploadToS3 error \n%w", err)
+			}
+
+			err = FinaliseFileAPI(creationResponse.Fields.SuccessActionRedirect, creationResponse.Fields, accessToken)
+			if err != nil {
+				return fmt.Errorf("FinaliseFileAPI error \n%w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	fmt.Println("Deleting images")
+	images, err := GetImagesAPI(tp.Id, accessToken)
+	if err != nil {
+		return err
+	}
+	for _, item := range *images {
+		err := DeleteImageAPI(item.Id, tp.Id, accessToken)
+		if err != nil {
+			fmt.Printf("[ERROR] %d\t %s %w\n", item.Id, item.Name, err)
+		} else {
+			fmt.Printf("[DELETED] %d\t %s\n", item.Id, item.Name)
+		}
+	}
+
+	fmt.Println("Deleting files")
+	files, err := GetFilesAPI(tp.Id, accessToken)
+	if err != nil {
+		return err
+	}
+	for _, item := range *files {
+		err := DeleteFileAPI(item.Id, tp.Id, accessToken)
+		if err != nil {
+			fmt.Printf("[ERROR] %d\t %s %w\n", item.Id, item.Name, err)
+		} else {
+			fmt.Printf("[DELETED] %d\t %s\n", item.Id, item.Name)
+		}
+	}
+	return nil
 }
 
 func (tp *Thing) Update(accessToken string) error {

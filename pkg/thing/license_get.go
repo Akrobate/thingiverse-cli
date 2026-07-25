@@ -5,6 +5,7 @@ type License struct {
 	Description string
 }
 
+// Licenses: cc, cc-sa, cc-nd, cc-nc-sa, cc-nc-nd, pd0, gpl, lgpl, bsd
 var SupportedLicenses = []License{
 	{
 		Value:       "c",
