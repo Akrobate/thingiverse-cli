@@ -28,32 +28,17 @@ Examples:
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}
 		//t.CheckFilesExists()
-		//return nil
 
 		t.Load()
-		fmt.Println("IMAGES")
-		images, err := thing.GetImagesAPI(t.Id, accessToken)
-		if err != nil {
-			return err
-		}
-		for _, item := range *images {
-			fmt.Printf("%d\t %s\n", item.Id, item.Name)
-		}
+		// t.GenerateHashFiles()
 
-		fmt.Println("FILES")
-		files, err := thing.GetFilesAPI(t.Id, accessToken)
-		if err != nil {
-			return err
-		}
-		for _, item := range *files {
-			fmt.Printf("%d\t %s\t %s\t %d\n", item.Id, item.Name, item.Hash, item.DefaultImage.Id)
-		}
-		fmt.Println("------------------------------------------")
+		t.CompareAndUpdateFiles(accessToken)
+		// for _, item := range *images {
+		// 	fmt.Printf("%d \t %s\n", item.Id, item.Name)
+		// }
 
-		t.DeleteAllFilesAndImages(accessToken)
+		// t.DeleteAllFilesAndImages(accessToken)
 		return nil
-
-		// return t.UploadFiles(accessToken)
 	},
 }
 

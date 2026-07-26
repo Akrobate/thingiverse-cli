@@ -2,7 +2,7 @@ package utils
 
 import (
 	"crypto/md5"
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -21,20 +21,19 @@ func FileExists(path string) bool {
 }
 
 func CalculateFileHash(filePath string) (string, error) {
-
 	file, err := os.Open(filePath)
 	if err != nil {
-		return "", fmt.Errorf("Cannot open file %s: %w", filePath, err)
+		return "", fmt.Errorf("failed to open file %s: %w", filePath, err)
 	}
 	defer file.Close()
 	hasher := md5.New()
+
 	if _, err := io.Copy(hasher, file); err != nil {
-		return "", fmt.Errorf("Hash calculation error: %w", err)
+		return "", fmt.Errorf("failed to compute file hash: %w", err)
 	}
 	hashBytes := hasher.Sum(nil)
-	hashString := hex.EncodeToString(hashBytes)
-
-	return hashString, nil
+	base64Hash := base64.StdEncoding.EncodeToString(hashBytes)
+	return base64Hash, nil
 }
 
 func GetFileSize(filePath string) (int64, error) {

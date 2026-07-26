@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 )
 
 type ThingFilePostResponse struct {
@@ -43,40 +45,42 @@ type FileGetResponse struct {
 	DefaultImage ImageGetResponse `json:"default_image"`
 }
 
-func CreateFileAPI(id int, filename string, accessToken string) (*ThingFilePostResponse, error) {
+func UploadFileProcess(thingID int, localPath string, accessToken string) error {
+	filename := filepath.Base(localPath)
+	creationResponse, err := CreateFileAPI(thingID, filename, accessToken)
+	if err != nil {
+		return fmt.Errorf("CreateFileAPI error \n%w", err)
+	}
+
+	err = UploadToS3(creationResponse.Action, creationResponse.Fields, localPath)
+	if err != nil {
+		return fmt.Errorf("UploadToS3 error \n%w", err)
+	}
+
+	err = FinaliseFileAPI(creationResponse.Fields.SuccessActionRedirect, creationResponse.Fields, accessToken)
+	if err != nil {
+		return fmt.Errorf("FinaliseFileAPI error \n%w", err)
+	}
+	return nil
+}
+
+func CreateFileAPI(thingID int, filename string, accessToken string) (*ThingFilePostResponse, error) {
 
 	postRequest := struct {
 		Filename string `json:"filename"`
-	}{
-		Filename: filename,
-	}
+	}{Filename: filename}
 
 	jsonData, err := json.Marshal(postRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error JSON serialize : %w", err)
 	}
 
-	url := fmt.Sprintf("%s/things/%d/files", apiBaseURL, id)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	url := fmt.Sprintf("%s/things/%d/files", apiBaseURL, thingID)
+	resp, err := utils.HttpDoAuthenticatedPostRequest(url, jsonData, accessToken)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating request : %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("Request failed : %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API Error (HTTP %d) : %s", resp.StatusCode, string(bodyBytes))
-	}
 
 	var t ThingFilePostResponse
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
@@ -86,33 +90,15 @@ func CreateFileAPI(id int, filename string, accessToken string) (*ThingFilePostR
 }
 
 func FinaliseFileAPI(successActionRedirect string, policy S3UploadPolicy, accessToken string) error {
-
 	jsonData, err := json.Marshal(policy)
 	if err != nil {
 		return fmt.Errorf("Error JSON serialize : %w", err)
 	}
-
-	req, err := http.NewRequest("POST", successActionRedirect, bytes.NewBuffer(jsonData))
+	resp, err := utils.HttpDoAuthenticatedPostRequest(successActionRedirect, jsonData, accessToken)
 	if err != nil {
-		return fmt.Errorf("Error creating request : %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("Request failed : %w", err)
+		return err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API Error (HTTP %d) : %s", resp.StatusCode, string(bodyBytes))
-	}
-
 	return nil
 }
 
@@ -192,55 +178,23 @@ func DeleteFileAPI(imageID int, thingID int, accessToken string) error {
 }
 
 func genericContentDelete(item string, imageID int, thingID int, accessToken string) error {
-
 	url := fmt.Sprintf("%s/things/%d/%s/%d", apiBaseURL, thingID, item, imageID)
-
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	resp, err := utils.HttpDoAuthenticatedDeleteRequest(url, accessToken)
 	if err != nil {
-		return fmt.Errorf("Error creating request : %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("Failed HTTP DELETE : %w", err)
+		return err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Error API (HTTP %d) : %s", resp.StatusCode, string(bodyBytes))
-	}
-
 	return nil
 }
 
 func GetImagesAPI(thingID int, accessToken string) (*[]ImageGetResponse, error) {
 	url := fmt.Sprintf("%s/things/%d/%s", apiBaseURL, thingID, "images")
 
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API Error (HTTP %d): %s", resp.StatusCode, string(bodyBytes))
-	}
 
 	var t []ImageGetResponse
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
@@ -253,26 +207,11 @@ func GetImagesAPI(thingID int, accessToken string) (*[]ImageGetResponse, error) 
 func GetFilesAPI(thingID int, accessToken string) (*[]FileGetResponse, error) {
 	url := fmt.Sprintf("%s/things/%d/%s", apiBaseURL, thingID, "files")
 
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API Error (HTTP %d): %s", resp.StatusCode, string(bodyBytes))
-	}
 
 	var t []FileGetResponse
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
@@ -280,4 +219,40 @@ func GetFilesAPI(thingID int, accessToken string) (*[]FileGetResponse, error) {
 	}
 
 	return &t, nil
+}
+
+func GetFilePreivewImages(thingID int, accessToken string) (*[]ImageGetResponse, error) {
+
+	files, err := GetFilesAPI(thingID, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("Error GetFilesAPI %w", err)
+	}
+
+	var results []ImageGetResponse
+	for _, item := range *files {
+		results = append(results, item.DefaultImage)
+	}
+	return &results, nil
+}
+
+func GetGalleriesFilesWithoutModelsPreviews(thingID int, accessToken string) (*[]ImageGetResponse, error) {
+	images, err := GetImagesAPI(thingID, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot GetImagesAPI %w", err)
+	}
+	filePreviewImages, err := GetFilePreivewImages(thingID, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot GetFilePreivewImages %w", err)
+	}
+	excludedIDs := make(map[int]bool, len(*filePreviewImages))
+	for _, img := range *filePreviewImages {
+		excludedIDs[img.Id] = true
+	}
+	var filteredImages []ImageGetResponse
+	for _, img := range *images {
+		if !excludedIDs[img.Id] {
+			filteredImages = append(filteredImages, img)
+		}
+	}
+	return &filteredImages, nil
 }

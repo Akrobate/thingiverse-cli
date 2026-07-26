@@ -21,6 +21,7 @@ type ThingResponse struct {
 
 type ThingFile struct {
 	LocalPath string `json:"local_path" yaml:"local_path"`
+	LocalHash string
 }
 
 type Thing struct {
@@ -32,7 +33,8 @@ type Thing struct {
 	Tags         []string    `json:"tags" yaml:"tags"`
 	Instructions string      `json:"instructions" yaml:"instructions"`
 	Description  string      `json:"description" yaml:"description"`
-	Files        []ThingFile `json:"files" yaml:"files"`
+	ImageFiles   []ThingFile `json:"image_files" yaml:"image_files"`
+	ModelFiles   []ThingFile `json:"model_files" yaml:"model_files"`
 }
 
 func NewThing() (*Thing, error) {
@@ -54,8 +56,25 @@ func (tp *Thing) Load() error {
 	if err != nil {
 		return err
 	}
+	err = yaml.Unmarshal(data, tp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	return yaml.Unmarshal(data, tp)
+func (tp *Thing) GenerateHashFiles() error {
+	for index, _ := range tp.ModelFiles {
+		hash, err := utils.CalculateFileHash(tp.ModelFiles[index].LocalPath)
+		if err != nil {
+			fmt.Println(err)
+			tp.ModelFiles[index].LocalHash = ""
+		} else {
+			tp.ModelFiles[index].LocalHash = hash
+		}
+		fmt.Println(tp.ModelFiles[index])
+	}
+	return nil
 }
 
 func (tp *Thing) CheckFilesExists() error {
@@ -63,43 +82,106 @@ func (tp *Thing) CheckFilesExists() error {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
 
-	for _, item := range tp.Files {
+	fmt.Println("Image files")
+	for _, item := range tp.ImageFiles {
 		if utils.FileExists(item.LocalPath) {
 			fmt.Printf("[OK]\t%s\n", item.LocalPath)
 		} else {
 			fmt.Printf("[ERROR]\t%s\n", item.LocalPath)
 		}
 	}
-
+	fmt.Println("Model files")
+	for _, item := range tp.ModelFiles {
+		if utils.FileExists(item.LocalPath) {
+			fmt.Printf("[OK]\t%s\n", item.LocalPath)
+		} else {
+			fmt.Printf("[ERROR]\t%s\n", item.LocalPath)
+		}
+	}
 	return nil
 }
 
-func (tp *Thing) UploadFiles(accessToken string) error {
+func (tp *Thing) Update(accessToken string) error {
+
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
 
-	for _, item := range tp.Files {
+	updateRequest := ThingUpdateRequest{
+		Name:        tp.Name,
+		Category:    tp.Category,
+		Description: tp.Description,
+		IsWip:       tp.IsWip,
+		Tags:        tp.Tags,
+		License:     tp.License,
+	}
+
+	if err := UpdateAPI(tp.Id, &updateRequest, accessToken); err != nil {
+		return fmt.Errorf("Error updating thing\n%w", err)
+	}
+
+	if err := tp.DeleteAllFilesAndImages(accessToken); err != nil {
+		return fmt.Errorf("Error updating thing\n%w", err)
+	}
+
+	if err := tp.UploadAllFilesAndImages(accessToken); err != nil {
+		return fmt.Errorf("Error updating thing\n%w", err)
+	}
+
+	return nil
+}
+
+func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
+
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	if err := tp.GenerateHashFiles(); err != nil {
+		return fmt.Errorf("Cannot GenerateHashFiles\n%w", err)
+	}
+
+	files, err := GetFilesAPI(tp.Id, accessToken)
+	if err != nil {
+		return fmt.Errorf("Cannot GetFilesAPI \n%w", err)
+	}
+
+	var toRemoveOnApi []FileGetResponse
+	for _, apiResult := range *files {
+		exists := false
+		for _, localFile := range tp.ModelFiles {
+
+			if apiResult.Name == filepath.Base(localFile.LocalPath) && apiResult.Hash == localFile.LocalHash {
+				fmt.Println(filepath.Base(localFile.LocalPath))
+				exists = true
+			}
+
+		}
+		if !exists {
+			toRemoveOnApi = append(toRemoveOnApi, apiResult)
+		}
+	}
+	fmt.Println("--------------------------------------------")
+	for _, item := range toRemoveOnApi {
+		fmt.Printf("=>>>>>>>>>> %d \t %s\n", item.Id, item.Name)
+	}
+
+	return nil
+}
+
+func (tp *Thing) UploadAllFilesAndImages(accessToken string) error {
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+	fmt.Println("Upload image files / model files")
+	for _, item := range append(tp.ImageFiles, tp.ModelFiles...) {
 		if utils.FileExists(item.LocalPath) {
-
-			filename := filepath.Base(item.LocalPath)
-			creationResponse, err := CreateFileAPI(tp.Id, filename, accessToken)
+			err := UploadFileProcess(tp.Id, item.LocalPath, accessToken)
 			if err != nil {
-				return fmt.Errorf("CreateFileAPI error \n%w", err)
-			}
-
-			err = UploadToS3(creationResponse.Action, creationResponse.Fields, item.LocalPath)
-			if err != nil {
-				return fmt.Errorf("UploadToS3 error \n%w", err)
-			}
-
-			err = FinaliseFileAPI(creationResponse.Fields.SuccessActionRedirect, creationResponse.Fields, accessToken)
-			if err != nil {
-				return fmt.Errorf("FinaliseFileAPI error \n%w", err)
+				return err
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -138,28 +220,7 @@ func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 	return nil
 }
 
-func (tp *Thing) Update(accessToken string) error {
-
-	if err := tp.Load(); err != nil {
-		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
-	}
-
-	updateRequest := ThingUpdateRequest{
-		Name:        tp.Name,
-		Category:    tp.Category,
-		Description: tp.Description,
-		IsWip:       tp.IsWip,
-		Tags:        tp.Tags,
-		License:     tp.License,
-	}
-
-	if err := UpdateAPI(tp.Id, &updateRequest, accessToken); err != nil {
-		return fmt.Errorf("Error updating thing\n%w", err)
-	}
-
-	return nil
-}
-
+// @todo: recode
 func (tp *Thing) Create(accessToken string) (int, error) {
 
 	jsonData, err := json.Marshal(tp)

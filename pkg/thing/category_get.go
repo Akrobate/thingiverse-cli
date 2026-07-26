@@ -3,8 +3,8 @@ package thing
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+
+	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 )
 
 type CategoryGetResponse struct {
@@ -21,27 +21,11 @@ type SubCategoryGetResponse struct {
 func CategorySearch(accessToken string) (*[]CategoryGetResponse, error) {
 
 	url := fmt.Sprintf("%s/categories", apiBaseURL)
-
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API Error (HTTP %d): %s", resp.StatusCode, string(bodyBytes))
-	}
 
 	var t []CategoryGetResponse
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
@@ -54,27 +38,11 @@ func CategorySearch(accessToken string) (*[]CategoryGetResponse, error) {
 func SubCategorySearch(slug string, accessToken string) (*SubCategoryGetResponse, error) {
 
 	url := fmt.Sprintf("%s/categories/%s", apiBaseURL, slug)
-
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API Error (HTTP %d): %s", resp.StatusCode, string(bodyBytes))
-	}
 
 	var t SubCategoryGetResponse
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
