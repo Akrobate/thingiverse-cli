@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/Akrobate/thingiverse-cli/pkg/utils"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -141,29 +142,51 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		return fmt.Errorf("Cannot GenerateHashFiles\n%w", err)
 	}
 
-	files, err := GetFilesAPI(tp.Id, accessToken)
+	apiFiles, err := GetFilesAPI(tp.Id, accessToken)
 	if err != nil {
 		return fmt.Errorf("Cannot GetFilesAPI \n%w", err)
 	}
 
-	var toRemoveOnApi []FileGetResponse
-	for _, apiResult := range *files {
-		exists := false
-		for _, localFile := range tp.ModelFiles {
+	//var toRemoveOnApi []FileGetResponse
+	//for _, apiResult := range *files {
+	//	exists := false
+	//	for _, localFile := range tp.ModelFiles {
+	//
+	//		if apiResult.Name == filepath.Base(localFile.LocalPath) && apiResult.Hash == localFile.LocalHash {
+	//			fmt.Println(filepath.Base(localFile.LocalPath))
+	//			exists = true
+	//		}
+	//
+	//	}
+	//	if !exists {
+	//		toRemoveOnApi = append(toRemoveOnApi, apiResult)
+	//	}
+	//}
 
-			if apiResult.Name == filepath.Base(localFile.LocalPath) && apiResult.Hash == localFile.LocalHash {
-				fmt.Println(filepath.Base(localFile.LocalPath))
-				exists = true
-			}
+	filesNamesList := lo.Map(tp.ModelFiles, func(img ThingFile, _ int) string {
+		return filepath.Base(img.LocalPath)
+	})
 
-		}
-		if !exists {
-			toRemoveOnApi = append(toRemoveOnApi, apiResult)
-		}
-	}
-	fmt.Println("--------------------------------------------")
+	toRemoveOnApi := lo.Filter(*apiFiles, func(img FileGetResponse, _ int) bool {
+		return !lo.Contains(filesNamesList, img.Name)
+	})
+
+	fmt.Println("--------------- TO REMOVE ON API -----------------------")
 	for _, item := range toRemoveOnApi {
 		fmt.Printf("=>>>>>>>>>> %d \t %s\n", item.Id, item.Name)
+	}
+
+	apiFilesNamesList := lo.Map(*apiFiles, func(img FileGetResponse, _ int) string {
+		return img.Name
+	})
+
+	toUpload := lo.Filter(tp.ModelFiles, func(img ThingFile, _ int) bool {
+		return !lo.Contains(apiFilesNamesList, filepath.Base(img.LocalPath))
+	})
+
+	fmt.Println("--------------- TO CREATE ON API -----------------------")
+	for _, item := range toUpload {
+		fmt.Printf("=>>>>>>>>>> %s\n", item.LocalPath)
 	}
 
 	return nil
