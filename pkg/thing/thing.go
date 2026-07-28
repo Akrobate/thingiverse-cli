@@ -189,6 +189,47 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		fmt.Printf("=>>>>>>>>>> %s\n", item.LocalPath)
 	}
 
+	fmt.Println("--------------------------------------")
+	fmt.Println("--------------------------------------")
+	fmt.Println("--------------------------------------")
+	commonFilesNames := lo.Filter(filesNamesList, func(item string, _ int) bool {
+		return lo.Contains(apiFilesNamesList, item)
+	})
+
+	fmt.Println("--------------- Common files -----------------------")
+	for _, item := range commonFilesNames {
+		fmt.Printf("=>>>>>>>>>> %s\n", item)
+	}
+
+	type MixedReponseFile struct {
+		LocalPath string
+		FileName  string
+		ApiId     int
+		HashMatch bool
+	}
+
+	mixedCommontFilesResponse := lo.Map(commonFilesNames, func(filename string, _ int) MixedReponseFile {
+		apiItem, _ := lo.Find(*apiFiles, func(item FileGetResponse) bool {
+			return item.Name == filename
+		})
+
+		modelItem, _ := lo.Find(tp.ModelFiles, func(item ThingFile) bool {
+			return filepath.Base(item.LocalPath) == filename
+		})
+
+		return MixedReponseFile{
+			LocalPath: modelItem.LocalPath,
+			FileName:  apiItem.Name,
+			ApiId:     apiItem.Id,
+			HashMatch: apiItem.Hash == modelItem.LocalHash,
+		}
+	})
+
+	fmt.Println("--------------- Mixed -----------------------")
+	for _, item := range mixedCommontFilesResponse {
+		fmt.Printf("=>>>>>>>>>> %d \t %s \t %s\t %s\n", item.ApiId, item.HashMatch, item.LocalPath, item.FileName)
+	}
+
 	return nil
 }
 
