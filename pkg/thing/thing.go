@@ -147,87 +147,54 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		return fmt.Errorf("Cannot GetFilesAPI \n%w", err)
 	}
 
-	//var toRemoveOnApi []FileGetResponse
-	//for _, apiResult := range *files {
-	//	exists := false
-	//	for _, localFile := range tp.ModelFiles {
-	//
-	//		if apiResult.Name == filepath.Base(localFile.LocalPath) && apiResult.Hash == localFile.LocalHash {
-	//			fmt.Println(filepath.Base(localFile.LocalPath))
-	//			exists = true
-	//		}
-	//
-	//	}
-	//	if !exists {
-	//		toRemoveOnApi = append(toRemoveOnApi, apiResult)
-	//	}
-	//}
-
-	filesNamesList := lo.Map(tp.ModelFiles, func(img ThingFile, _ int) string {
-		return filepath.Base(img.LocalPath)
-	})
-
-	toRemoveOnApi := lo.Filter(*apiFiles, func(img FileGetResponse, _ int) bool {
-		return !lo.Contains(filesNamesList, img.Name)
-	})
-
-	fmt.Println("--------------- TO REMOVE ON API -----------------------")
-	for _, item := range toRemoveOnApi {
-		fmt.Printf("=>>>>>>>>>> %d \t %s\n", item.Id, item.Name)
-	}
-
-	apiFilesNamesList := lo.Map(*apiFiles, func(img FileGetResponse, _ int) string {
-		return img.Name
-	})
-
-	toUpload := lo.Filter(tp.ModelFiles, func(img ThingFile, _ int) bool {
-		return !lo.Contains(apiFilesNamesList, filepath.Base(img.LocalPath))
-	})
-
-	fmt.Println("--------------- TO CREATE ON API -----------------------")
-	for _, item := range toUpload {
-		fmt.Printf("=>>>>>>>>>> %s\n", item.LocalPath)
-	}
-
-	fmt.Println("--------------------------------------")
-	fmt.Println("--------------------------------------")
-	fmt.Println("--------------------------------------")
-	commonFilesNames := lo.Filter(filesNamesList, func(item string, _ int) bool {
-		return lo.Contains(apiFilesNamesList, item)
-	})
-
-	fmt.Println("--------------- Common files -----------------------")
-	for _, item := range commonFilesNames {
-		fmt.Printf("=>>>>>>>>>> %s\n", item)
-	}
+	allFilesNamesList := append(
+		lo.Map(tp.ModelFiles, func(img ThingFile, _ int) string {
+			return filepath.Base(img.LocalPath)
+		}),
+		lo.Map(*apiFiles, func(img FileGetResponse, _ int) string {
+			return img.Name
+		})...,
+	)
 
 	type MixedReponseFile struct {
-		LocalPath string
-		FileName  string
-		ApiId     int
-		HashMatch bool
+		LocalPath    string
+		FileName     string
+		ApiId        int
+		ApiImageId   int
+		HashMatch    bool
+		FoundInApi   bool
+		FoundInLocal bool
 	}
 
-	mixedCommontFilesResponse := lo.Map(commonFilesNames, func(filename string, _ int) MixedReponseFile {
-		apiItem, _ := lo.Find(*apiFiles, func(item FileGetResponse) bool {
+	mixedCommontFilesResponse := lo.Map(allFilesNamesList, func(filename string, _ int) MixedReponseFile {
+		apiItem, foundInApi := lo.Find(*apiFiles, func(item FileGetResponse) bool {
 			return item.Name == filename
 		})
 
-		modelItem, _ := lo.Find(tp.ModelFiles, func(item ThingFile) bool {
+		modelItem, foundInLocal := lo.Find(tp.ModelFiles, func(item ThingFile) bool {
 			return filepath.Base(item.LocalPath) == filename
 		})
 
-		return MixedReponseFile{
-			LocalPath: modelItem.LocalPath,
-			FileName:  apiItem.Name,
-			ApiId:     apiItem.Id,
-			HashMatch: apiItem.Hash == modelItem.LocalHash,
+		var resp = MixedReponseFile{
+			LocalPath:    modelItem.LocalPath,
+			FileName:     apiItem.Name,
+			ApiId:        apiItem.Id,
+			HashMatch:    apiItem.Hash == modelItem.LocalHash,
+			FoundInApi:   foundInApi,
+			FoundInLocal: foundInLocal,
 		}
+
+		if foundInApi {
+			resp.ApiImageId = apiItem.DefaultImage.Id
+		}
+
+		return resp
 	})
 
 	fmt.Println("--------------- Mixed -----------------------")
 	for _, item := range mixedCommontFilesResponse {
-		fmt.Printf("=>>>>>>>>>> %d \t %s \t %s\t %s\n", item.ApiId, item.HashMatch, item.LocalPath, item.FileName)
+		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
+			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
 	}
 
 	return nil
