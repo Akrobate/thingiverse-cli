@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 	"github.com/samber/lo"
@@ -68,12 +69,9 @@ func (tp *Thing) GenerateHashFiles() error {
 	for index, _ := range tp.ModelFiles {
 		hash, err := utils.CalculateFileHash(tp.ModelFiles[index].LocalPath)
 		if err != nil {
-			fmt.Println(err)
-			tp.ModelFiles[index].LocalHash = ""
-		} else {
-			tp.ModelFiles[index].LocalHash = hash
+			return err
 		}
-		fmt.Println(tp.ModelFiles[index])
+		tp.ModelFiles[index].LocalHash = hash
 	}
 	return nil
 }
@@ -137,7 +135,6 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
-
 	if err := tp.GenerateHashFiles(); err != nil {
 		return fmt.Errorf("Cannot GenerateHashFiles\n%w", err)
 	}
@@ -147,26 +144,29 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		return fmt.Errorf("Cannot GetFilesAPI \n%w", err)
 	}
 
-	allFilesNamesList := append(
+	allUniqFilesNamesList := lo.Uniq(append(
 		lo.Map(tp.ModelFiles, func(img ThingFile, _ int) string {
 			return filepath.Base(img.LocalPath)
 		}),
 		lo.Map(*apiFiles, func(img FileGetResponse, _ int) string {
 			return img.Name
 		})...,
-	)
+	))
 
 	type MixedReponseFile struct {
-		LocalPath    string
-		FileName     string
-		ApiId        int
-		ApiImageId   int
-		HashMatch    bool
-		FoundInApi   bool
-		FoundInLocal bool
+		LocalPath       string
+		FileName        string
+		ApiId           int
+		ApiImageId      int
+		HashMatch       bool
+		FoundInApi      bool
+		FoundInLocal    bool
+		ToDeleteOnApi   bool
+		ToCreateOnApi   bool
+		ToReuploadOnApi bool
 	}
 
-	mixedCommontFilesResponse := lo.Map(allFilesNamesList, func(filename string, _ int) MixedReponseFile {
+	mixedCommontFilesResponse := lo.Map(allUniqFilesNamesList, func(filename string, _ int) MixedReponseFile {
 		apiItem, foundInApi := lo.Find(*apiFiles, func(item FileGetResponse) bool {
 			return item.Name == filename
 		})
@@ -175,13 +175,18 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 			return filepath.Base(item.LocalPath) == filename
 		})
 
+		hashMatch := apiItem.Hash == modelItem.LocalHash
+
 		var resp = MixedReponseFile{
-			LocalPath:    modelItem.LocalPath,
-			FileName:     apiItem.Name,
-			ApiId:        apiItem.Id,
-			HashMatch:    apiItem.Hash == modelItem.LocalHash,
-			FoundInApi:   foundInApi,
-			FoundInLocal: foundInLocal,
+			LocalPath:       modelItem.LocalPath,
+			FileName:        apiItem.Name,
+			ApiId:           apiItem.Id,
+			HashMatch:       hashMatch,
+			FoundInApi:      foundInApi,
+			FoundInLocal:    foundInLocal,
+			ToDeleteOnApi:   foundInApi && !foundInLocal,
+			ToCreateOnApi:   !foundInApi && foundInLocal,
+			ToReuploadOnApi: foundInApi && foundInLocal && !hashMatch,
 		}
 
 		if foundInApi {
@@ -193,6 +198,35 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 
 	fmt.Println("--------------- Mixed -----------------------")
 	for _, item := range mixedCommontFilesResponse {
+		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
+			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+	}
+
+	filterFuncHighlevel := func(prop string) []MixedReponseFile {
+		return lo.Filter(mixedCommontFilesResponse, func(item MixedReponseFile, _ int) bool {
+			v := reflect.ValueOf(item)
+			field := v.FieldByName(prop)
+			return field.Bool()
+		})
+	}
+
+	fmt.Println("")
+	fmt.Println("--------------- ToDeleteOnApi -----------------------")
+	for _, item := range filterFuncHighlevel("ToDeleteOnApi") {
+		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
+			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+	}
+
+	fmt.Println("")
+	fmt.Println("--------------- ToCreateOnApi -----------------------")
+	for _, item := range filterFuncHighlevel("ToCreateOnApi") {
+		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
+			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+	}
+
+	fmt.Println("")
+	fmt.Println("--------------- ToReuploadOnApi -----------------------")
+	for _, item := range filterFuncHighlevel("ToReuploadOnApi") {
 		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
 			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
 	}

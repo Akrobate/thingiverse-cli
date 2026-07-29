@@ -32,13 +32,13 @@ Examples:
 		t.Load()
 		// t.GenerateHashFiles()
 
-		t.CompareAndUpdateFiles(accessToken)
+		return t.CompareAndUpdateFiles(accessToken)
 		// for _, item := range *images {
 		// 	fmt.Printf("%d \t %s\n", item.Id, item.Name)
 		// }
 
 		// t.DeleteAllFilesAndImages(accessToken)
-		return nil
+		// return nil
 	},
 }
 
