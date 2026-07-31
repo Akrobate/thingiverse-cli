@@ -23,26 +23,23 @@ Examples:
 			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
+		dryRun, err := cmd.Flags().GetBool("dry_run")
+		if err != nil {
+			return fmt.Errorf("failed to retrieve dry_run flag: %w", err)
+		}
+
 		t, err := thing.NewThing()
 		if err != nil {
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}
-		//t.CheckFilesExists()
 
 		t.Load()
-		// t.GenerateHashFiles()
-
-		return t.CompareAndUpdateFiles(accessToken)
-		// for _, item := range *images {
-		// 	fmt.Printf("%d \t %s\n", item.Id, item.Name)
-		// }
-
-		// t.DeleteAllFilesAndImages(accessToken)
-		// return nil
+		return t.CompareAndUpdateFiles(accessToken, dryRun)
 	},
 }
 
 func init() {
 	thingCheckCmd.Flags().String("access_token", "", "Access token for thingiverse")
+	thingCheckCmd.Flags().Bool("dry_run", false, "Preview operation")
 	thingCmd.AddCommand(thingCheckCmd)
 }

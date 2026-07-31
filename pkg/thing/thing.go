@@ -130,7 +130,7 @@ func (tp *Thing) Update(accessToken string) error {
 	return nil
 }
 
-func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
+func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool) error {
 
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
@@ -196,10 +196,13 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		return resp
 	})
 
-	fmt.Println("--------------- Mixed -----------------------")
-	for _, item := range mixedCommontFilesResponse {
+	debugPrint := func(item MixedReponseFile) {
 		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
 			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+	}
+
+	for _, item := range mixedCommontFilesResponse {
+		debugPrint(item)
 	}
 
 	filterFuncHighlevel := func(prop string) []MixedReponseFile {
@@ -210,25 +213,16 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string) error {
 		})
 	}
 
-	fmt.Println("")
-	fmt.Println("--------------- ToDeleteOnApi -----------------------")
 	for _, item := range filterFuncHighlevel("ToDeleteOnApi") {
-		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
-			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+		debugPrint(item)
 	}
 
-	fmt.Println("")
-	fmt.Println("--------------- ToCreateOnApi -----------------------")
 	for _, item := range filterFuncHighlevel("ToCreateOnApi") {
-		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
-			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+		debugPrint(item)
 	}
 
-	fmt.Println("")
-	fmt.Println("--------------- ToReuploadOnApi -----------------------")
 	for _, item := range filterFuncHighlevel("ToReuploadOnApi") {
-		fmt.Printf("ApiId %d \t HashMatch: %t \t FoundInApi: %t \t FoundInLocal: %t \t %s\t %s \t ApiImageId: %d\n",
-			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
+		debugPrint(item)
 	}
 
 	return nil
