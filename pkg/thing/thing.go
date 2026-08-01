@@ -130,7 +130,7 @@ func (tp *Thing) Update(accessToken string) error {
 	return nil
 }
 
-func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool) error {
+func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bool) error {
 
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
@@ -201,8 +201,10 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool) error {
 			item.ApiId, item.HashMatch, item.FoundInApi, item.FoundInLocal, item.LocalPath, item.FileName, item.ApiImageId)
 	}
 
-	for _, item := range mixedCommontFilesResponse {
-		debugPrint(item)
+	if debug {
+		for _, item := range mixedCommontFilesResponse {
+			debugPrint(item)
+		}
 	}
 
 	filterFuncHighlevel := func(prop string) []MixedReponseFile {
@@ -213,16 +215,26 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool) error {
 		})
 	}
 
+	if dryRun {
+		fmt.Println("DRY RUN")
+	}
+
 	for _, item := range filterFuncHighlevel("ToDeleteOnApi") {
-		debugPrint(item)
+		if debug {
+			debugPrint(item)
+		}
 	}
 
 	for _, item := range filterFuncHighlevel("ToCreateOnApi") {
-		debugPrint(item)
+		if debug {
+			debugPrint(item)
+		}
 	}
 
 	for _, item := range filterFuncHighlevel("ToReuploadOnApi") {
-		debugPrint(item)
+		if debug {
+			debugPrint(item)
+		}
 	}
 
 	return nil

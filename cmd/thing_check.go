@@ -28,18 +28,24 @@ Examples:
 			return fmt.Errorf("failed to retrieve dry_run flag: %w", err)
 		}
 
+		debug, err := cmd.Flags().GetBool("debug")
+		if err != nil {
+			return fmt.Errorf("failed to retrieve debug flag: %w", err)
+		}
+
 		t, err := thing.NewThing()
 		if err != nil {
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}
 
 		t.Load()
-		return t.CompareAndUpdateFiles(accessToken, dryRun)
+		return t.CompareAndUpdateFiles(accessToken, dryRun, debug)
 	},
 }
 
 func init() {
 	thingCheckCmd.Flags().String("access_token", "", "Access token for thingiverse")
 	thingCheckCmd.Flags().Bool("dry_run", false, "Preview operation")
+	thingCheckCmd.Flags().Bool("debug", false, "Show debug")
 	thingCmd.AddCommand(thingCheckCmd)
 }
