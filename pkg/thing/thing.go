@@ -216,25 +216,70 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bo
 	}
 
 	if dryRun {
-		fmt.Println("DRY RUN")
+		fmt.Println("[MODE] DRY RUN")
 	}
 
+	fmt.Print("Deleting on Thingiverse...\n")
 	for _, item := range filterFuncHighlevel("ToDeleteOnApi") {
 		if debug {
 			debugPrint(item)
 		}
+
+		if !dryRun {
+			if err := DeleteImageAPI(item.ApiImageId, tp.Id, accessToken); err != nil {
+				fmt.Printf("[Error] DeleteImageAPI %v\n", err)
+			}
+		}
+
+		if !dryRun {
+			if err := DeleteFileAPI(item.ApiId, tp.Id, accessToken); err != nil {
+				fmt.Printf("[Error] DeleteFileAPI %v\n", err)
+			}
+		}
+
+		fmt.Printf("[OK] %s\n", item.FileName)
 	}
 
+	fmt.Print("Creating on Thingiverse...\n")
 	for _, item := range filterFuncHighlevel("ToCreateOnApi") {
 		if debug {
 			debugPrint(item)
 		}
+
+		if !dryRun {
+			if err := UploadFileProcess(tp.Id, item.LocalPath, accessToken); err != nil {
+				fmt.Printf("[Error] CreateFileAPI %v\n", err)
+			}
+		}
+
+		fmt.Printf("[OK] %s\n", filepath.Base(item.LocalPath))
 	}
 
+	fmt.Print("Reupload on Thingiverse...\n")
 	for _, item := range filterFuncHighlevel("ToReuploadOnApi") {
 		if debug {
 			debugPrint(item)
 		}
+
+		if !dryRun {
+			if err := DeleteImageAPI(item.ApiImageId, tp.Id, accessToken); err != nil {
+				fmt.Printf("[Error] DeleteImageAPI %v\n", err)
+			}
+		}
+
+		if !dryRun {
+			if err := DeleteFileAPI(item.ApiId, tp.Id, accessToken); err != nil {
+				fmt.Printf("[Error] DeleteFileAPI %v\n", err)
+			}
+		}
+
+		if !dryRun {
+			if err := UploadFileProcess(tp.Id, item.LocalPath, accessToken); err != nil {
+				fmt.Printf("[Error] CreateFileAPI %v\n", err)
+			}
+		}
+
+		fmt.Printf("[OK] %s\n", filepath.Base(item.LocalPath))
 	}
 
 	return nil
