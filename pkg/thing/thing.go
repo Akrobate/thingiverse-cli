@@ -215,10 +215,6 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bo
 		})
 	}
 
-	if dryRun {
-		fmt.Println("[MODE] DRY RUN")
-	}
-
 	fmt.Print("Deleting on Thingiverse...\n")
 	for _, item := range filterFuncHighlevel("ToDeleteOnApi") {
 		if debug {
@@ -280,6 +276,37 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bo
 		}
 
 		fmt.Printf("[OK] %s\n", filepath.Base(item.LocalPath))
+	}
+
+	return nil
+}
+
+func (tp *Thing) DeleteAndUpdateAllImages(accessToken string, dryRun bool, debug bool) error {
+
+	fmt.Println("Deleting images")
+
+	// @todo: Check if the images returns also the rendered stl files. Should not be totaly deleted
+	images, err := GetImagesAPI(tp.Id, accessToken)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range *images {
+		err := DeleteImageAPI(item.Id, tp.Id, accessToken)
+		if err != nil {
+			fmt.Printf("[ERROR] %d\t %s %w\n", item.Id, item.Name, err)
+		} else {
+			fmt.Printf("[OK] %d\t %s\n", item.Id, item.Name)
+		}
+	}
+
+	for _, item := range tp.ImageFiles {
+		if utils.FileExists(item.LocalPath) {
+			err := UploadFileProcess(tp.Id, item.LocalPath, accessToken)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

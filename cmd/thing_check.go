@@ -28,6 +28,10 @@ Examples:
 			return fmt.Errorf("failed to retrieve dry_run flag: %w", err)
 		}
 
+		if dryRun {
+			fmt.Println("[MODE] DRY RUN")
+		}
+
 		debug, err := cmd.Flags().GetBool("debug")
 		if err != nil {
 			return fmt.Errorf("failed to retrieve debug flag: %w", err)
