@@ -1,17 +1,37 @@
 # thingiverse-cli
 
-thingiverse-cli command line tool for upload to thingiverse
+thingiverse-cli command line tool. Allows you to upload directly your updates to thingiverse or can be used as a part of the CI for publishing automaticly updates
 
 
 ## Commands
 
+### Configuration
+
+The first command to enter for setting the client id and client secret. This command will create the thingiverse-cli configuration file on your system. Should be called once to configure the account.
+
+```bash
+thingiverse-cli config
+```
+
+### Authentication
+
+Launch the authentication process. Just follow the steps, you will be asked to visit an url, and your browser will print you the access token. You'll have to copy paste the token in command line for saving it
+
+```bash
+thingiverse-cli auth
+```
+
 ### init
+
+The init command create an empty `thingiverse.yml` file in your project, once created you'll need to fill the fields with your data
 
 ```bash
 thingiverse-cli init
 ```
 
 ### View categories referential
+
+Show the possible values for categories
 
 ```bash
 thingiverse-cli remote categories
@@ -73,7 +93,7 @@ go build -o thingiverse-cli && sudo cp thingiverse-cli /usr/local/bin/
 
 ## Todo
 
+- [X] Init empty thingiverse.yml File command line
 - [ ] Search tags command line
-- [ ] Init empty thingiverse.yml File command line
 - [ ] Reorder galleries images
 - [ ] Reorder Files
