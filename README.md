@@ -37,6 +37,14 @@ Show the possible values for categories
 thingiverse-cli remote categories
 ```
 
+### search tags
+
+Search the existing tags values and counts
+
+```bash
+thingiverse-cli remote tags search_string
+```
+
 ### View licenses referential
 
 ```bash
