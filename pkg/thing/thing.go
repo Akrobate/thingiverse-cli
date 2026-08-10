@@ -363,6 +363,60 @@ func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 	return nil
 }
 
+// @todo
+func (tp *Thing) ReorderFiles(accessToken string) error {
+
+	return nil
+}
+
+// @todo
+func (tp *Thing) ReorderImages(accessToken string) error {
+
+	return nil
+}
+
+// @todo, add Files order part and update call
+func (tp *Thing) UpdateOrderFilesAndImage(id int, accessToken string) error {
+
+	type ImageFileOrderItem struct {
+		Id   int `json:"id"`
+		Rank int `json:"rank"`
+	}
+
+	type ThingFileImageOrderUpdateRequest struct {
+		Files  []ImageFileOrderItem `json:"files"`
+		Images []ImageFileOrderItem `json:"images"`
+	}
+
+	var request ThingFileImageOrderUpdateRequest
+
+	images, err := GetGalleriesFilesWithoutModelsPreviews(tp.Id, accessToken)
+
+	if err != nil {
+		return fmt.Errorf("Error GetGalleriesFilesWithoutModelsPreviews %w", err)
+	}
+
+	index := 0
+	for _, local_item := range tp.ImageFiles {
+		foundApiItem, foundInApi := lo.Find(*images, func(apiItem ImageGetResponse) bool {
+			return apiItem.Name == filepath.Base(local_item.LocalPath)
+		})
+
+		if !foundInApi {
+			return fmt.Errorf("Error Not found on api %s", filepath.Base(local_item.LocalPath))
+		}
+
+		var orderItem = ImageFileOrderItem{
+			Id:   foundApiItem.Id,
+			Rank: index,
+		}
+		request.Images = append(request.Images, orderItem)
+		index++
+	}
+
+	return nil
+}
+
 // @todo: recode
 func (tp *Thing) Create(accessToken string) (int, error) {
 

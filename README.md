@@ -102,6 +102,6 @@ go build -o thingiverse-cli && sudo cp thingiverse-cli /usr/local/bin/
 ## Todo
 
 - [X] Init empty thingiverse.yml File command line
-- [ ] Search tags command line
+- [X] Search tags command line
 - [ ] Reorder galleries images
 - [ ] Reorder Files
