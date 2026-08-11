@@ -363,19 +363,7 @@ func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 	return nil
 }
 
-// @todo
-func (tp *Thing) ReorderFiles(accessToken string) error {
-
-	return nil
-}
-
-// @todo
-func (tp *Thing) ReorderImages(accessToken string) error {
-
-	return nil
-}
-
-// @todo, add Files order part and update call
+// @todo, To test
 func (tp *Thing) UpdateOrderFilesAndImage(id int, accessToken string) error {
 
 	type ImageFileOrderItem struct {
@@ -391,12 +379,14 @@ func (tp *Thing) UpdateOrderFilesAndImage(id int, accessToken string) error {
 	var request ThingFileImageOrderUpdateRequest
 
 	images, err := GetGalleriesFilesWithoutModelsPreviews(tp.Id, accessToken)
+	files, err := GetFilesAPI(tp.Id, accessToken)
 
 	if err != nil {
 		return fmt.Errorf("Error GetGalleriesFilesWithoutModelsPreviews %w", err)
 	}
 
-	index := 0
+	indexImage := 0
+
 	for _, local_item := range tp.ImageFiles {
 		foundApiItem, foundInApi := lo.Find(*images, func(apiItem ImageGetResponse) bool {
 			return apiItem.Name == filepath.Base(local_item.LocalPath)
@@ -406,12 +396,42 @@ func (tp *Thing) UpdateOrderFilesAndImage(id int, accessToken string) error {
 			return fmt.Errorf("Error Not found on api %s", filepath.Base(local_item.LocalPath))
 		}
 
-		var orderItem = ImageFileOrderItem{
+		var orderImageItem = ImageFileOrderItem{
 			Id:   foundApiItem.Id,
-			Rank: index,
+			Rank: indexImage,
 		}
-		request.Images = append(request.Images, orderItem)
-		index++
+		request.Images = append(request.Images, orderImageItem)
+		indexImage++
+	}
+
+	indexFile := 0
+	for _, local_item := range tp.ModelFiles {
+		foundApiItem, foundInApi := lo.Find(*files, func(apiItem FileGetResponse) bool {
+			return apiItem.Name == filepath.Base(local_item.LocalPath)
+		})
+
+		if !foundInApi {
+			return fmt.Errorf("Error Not found on api %s", filepath.Base(local_item.LocalPath))
+		}
+
+		var orderFileItem = ImageFileOrderItem{
+			Id:   foundApiItem.Id,
+			Rank: indexFile,
+		}
+		request.Files = append(request.Files, orderFileItem)
+		indexFile++
+
+		var orderImageItem = ImageFileOrderItem{
+			Id:   foundApiItem.DefaultImage.Id,
+			Rank: indexImage,
+		}
+		request.Images = append(request.Images, orderImageItem)
+
+		indexImage++
+	}
+
+	if err := UpdateAPI(tp.Id, &request, accessToken); err != nil {
+		return fmt.Errorf("Error updating thing\n%w", err)
 	}
 
 	return nil

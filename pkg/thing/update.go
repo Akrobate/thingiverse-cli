@@ -18,7 +18,7 @@ type ThingUpdateRequest struct {
 	Description  string   `json:"description" yaml:"description"`
 }
 
-func UpdateAPI(id int, tr *ThingUpdateRequest, accessToken string) error {
+func UpdateAPI(id int, tr any, accessToken string) error {
 
 	jsonData, err := json.Marshal(tr)
 	if err != nil {
