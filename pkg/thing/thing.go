@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ type ThingResponse struct {
 
 type ThingFile struct {
 	LocalPath string `json:"local_path" yaml:"local_path"`
-	LocalHash string
+	LocalHash string `json:"-" yaml:"-"`
 }
 
 type Thing struct {
@@ -33,10 +34,10 @@ type Thing struct {
 	License      string      `json:"license" yaml:"license"`
 	IsWip        bool        `json:"is_wip" yaml:"is_wip"`
 	Tags         []string    `json:"tags" yaml:"tags"`
-	Instructions string      `json:"instructions" yaml:"instructions"`
-	Description  string      `json:"description" yaml:"description"`
 	ImageFiles   []ThingFile `json:"image_files" yaml:"image_files"`
 	ModelFiles   []ThingFile `json:"model_files" yaml:"model_files"`
+	Instructions string      `json:"instructions" yaml:"instructions"`
+	Description  string      `json:"description" yaml:"description"`
 }
 
 func NewThing() (*Thing, error) {
@@ -475,4 +476,64 @@ func (tp *Thing) Create(accessToken string) (int, error) {
 	tp.Id = thingResp.ID
 
 	return thingResp.ID, nil
+}
+
+func (tp *Thing) AutosetFilesAndImages(rootDir string, mode string) error {
+
+	// var list []string
+
+	if mode == "images" {
+		tp.ImageFiles = nil
+		err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if d.IsDir() || filepath.Ext(path) != ".png" {
+				return nil
+			}
+
+			var tf = ThingFile{
+				LocalPath: path,
+			}
+			tp.ImageFiles = append(tp.ImageFiles, tf)
+
+			return nil
+		})
+
+		if err != nil {
+			fmt.Println("Erreur :", err)
+		}
+	}
+
+	if mode == "files" {
+		tp.ModelFiles = nil
+		err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if d.IsDir() || filepath.Ext(path) != ".stl" {
+				return nil
+			}
+
+			var tf = ThingFile{
+				LocalPath: path,
+			}
+			tp.ModelFiles = append(tp.ModelFiles, tf)
+			return nil
+		})
+
+		if err != nil {
+			fmt.Println("Erreur :", err)
+		}
+	}
+
+	// for _, item := range list {
+	// 	fmt.Println(item)
+	// }
+
+	tp.Save()
+
+	return nil
 }
