@@ -480,60 +480,40 @@ func (tp *Thing) Create(accessToken string) (int, error) {
 
 func (tp *Thing) AutosetFilesAndImages(rootDir string, mode string) error {
 
-	// var list []string
-
+	ext := ""
 	if mode == "images" {
 		tp.ImageFiles = nil
-		err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if d.IsDir() || filepath.Ext(path) != ".png" {
-				return nil
-			}
-
-			var tf = ThingFile{
-				LocalPath: path,
-			}
-			tp.ImageFiles = append(tp.ImageFiles, tf)
-
-			return nil
-		})
-
-		if err != nil {
-			fmt.Println("Erreur :", err)
-		}
-	}
-
-	if mode == "files" {
+		ext = ".png"
+	} else {
 		tp.ModelFiles = nil
-		err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if d.IsDir() || filepath.Ext(path) != ".stl" {
-				return nil
-			}
-
-			var tf = ThingFile{
-				LocalPath: path,
-			}
-			tp.ModelFiles = append(tp.ModelFiles, tf)
-			return nil
-		})
-
-		if err != nil {
-			fmt.Println("Erreur :", err)
-		}
+		ext = ".stl"
 	}
 
-	// for _, item := range list {
-	// 	fmt.Println(item)
-	// }
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-	tp.Save()
+		if d.IsDir() || filepath.Ext(path) != ext {
+			return nil
+		}
 
-	return nil
+		var tf = ThingFile{
+			LocalPath: path,
+		}
+
+		if mode == "images" {
+			tp.ImageFiles = append(tp.ImageFiles, tf)
+		} else {
+			tp.ModelFiles = append(tp.ModelFiles, tf)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error AutosetFilesAndImages : %w", err)
+	}
+
+	return tp.Save()
 }
