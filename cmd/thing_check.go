@@ -18,6 +18,7 @@ Examples:
 	Args: cobra.ExactArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
+		// ========================== TEST CODE ================== Should be plugged to check methods
 		accessToken, err := getAccessToken(cmd)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve access_token: %w", err)
