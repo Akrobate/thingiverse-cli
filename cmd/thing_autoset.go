@@ -39,9 +39,11 @@ Examples:
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}
 
-		t.Load()
-		t.AutosetFilesAndImages(".", outputType)
-		return nil
+		if err := t.Load(); err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
+
+		return t.AutosetFilesAndImages(".", outputType)
 	},
 }
 

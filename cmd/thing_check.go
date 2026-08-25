@@ -18,33 +18,20 @@ Examples:
 	Args: cobra.ExactArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		// ========================== TEST CODE ================== Should be plugged to check methods
-		accessToken, err := getAccessToken(cmd)
-		if err != nil {
-			return fmt.Errorf("failed to retrieve access_token: %w", err)
-		}
-
-		dryRun, err := cmd.Flags().GetBool("dry_run")
-		if err != nil {
-			return fmt.Errorf("failed to retrieve dry_run flag: %w", err)
-		}
-
-		if dryRun {
-			fmt.Println("[MODE] DRY RUN")
-		}
-
-		debug, err := cmd.Flags().GetBool("debug")
-		if err != nil {
-			return fmt.Errorf("failed to retrieve debug flag: %w", err)
-		}
-
 		t, err := thing.NewThing()
 		if err != nil {
 			return fmt.Errorf("failed to initialize configuration: %w", err)
 		}
 
-		t.Load()
-		return t.CompareAndUpdateFiles(accessToken, dryRun, debug)
+		if err := t.Load(); err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
+
+		if err := t.CheckThingParamsoad(); err != nil {
+			return fmt.Errorf("Bad param in thingiverse configuration file: %w", err)
+		}
+
+		return nil
 	},
 }
 

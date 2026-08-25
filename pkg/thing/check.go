@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (tp *Thing) checkThingParams() error {
+func (tp *Thing) CheckThingParams() error {
 
 	// 	Id           int         `json:"-" yaml:"id"`
 	// 	Name         string      `json:"name" yaml:"name"`
