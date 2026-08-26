@@ -12,6 +12,9 @@ var thingCheckCmd = &cobra.Command{
 	Short: "Check the local file",
 	Long: `Check the local file
 
+	Verify if the fields are filled and if the remote creation would be ok.
+	Check if listed files exists
+
 Examples:
   thingiverse-cli thing check
   `,
@@ -27,17 +30,16 @@ Examples:
 			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 
-		if err := t.CheckThingParamsoad(); err != nil {
+		if err := t.CheckThingParams(); err != nil {
 			return fmt.Errorf("Bad param in thingiverse configuration file: %w", err)
 		}
+
+		t.CheckFilesExists()
 
 		return nil
 	},
 }
 
 func init() {
-	thingCheckCmd.Flags().String("access_token", "", "Access token for thingiverse")
-	thingCheckCmd.Flags().Bool("dry_run", false, "Preview operation")
-	thingCheckCmd.Flags().Bool("debug", false, "Show debug")
 	thingCmd.AddCommand(thingCheckCmd)
 }
