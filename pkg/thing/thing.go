@@ -120,13 +120,14 @@ func (tp *Thing) Update(accessToken string) error {
 		return fmt.Errorf("Error updating thing\n%w", err)
 	}
 
-	if err := tp.DeleteAllFilesAndImages(accessToken); err != nil {
-		return fmt.Errorf("Error updating thing\n%w", err)
-	}
+	// @todo old method of sync files, should be deleted ?
+	// if err := tp.DeleteAllFilesAndImages(accessToken); err != nil {
+	// 	return fmt.Errorf("Error updating thing\n%w", err)
+	// }
 
-	if err := tp.UploadAllFilesAndImages(accessToken); err != nil {
-		return fmt.Errorf("Error updating thing\n%w", err)
-	}
+	// if err := tp.UploadAllFilesAndImages(accessToken); err != nil {
+	// 	return fmt.Errorf("Error updating thing\n%w", err)
+	// }
 
 	return nil
 }
@@ -245,7 +246,7 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bo
 
 		if !dryRun {
 			if err := UploadFileProcess(tp.Id, item.LocalPath, accessToken); err != nil {
-				fmt.Printf("[Error] CreateFileAPI %v\n", err)
+				fmt.Printf("[Error] UploadFileProcess %v\n", err)
 			}
 		}
 
@@ -272,7 +273,7 @@ func (tp *Thing) CompareAndUpdateFiles(accessToken string, dryRun bool, debug bo
 
 		if !dryRun {
 			if err := UploadFileProcess(tp.Id, item.LocalPath, accessToken); err != nil {
-				fmt.Printf("[Error] CreateFileAPI %v\n", err)
+				fmt.Printf("[Error] UploadFileProcess %v\n", err)
 			}
 		}
 
@@ -286,8 +287,7 @@ func (tp *Thing) DeleteAndUpdateAllImages(accessToken string, dryRun bool, debug
 
 	fmt.Println("Deleting images")
 
-	// @todo: Check if the images returns also the rendered stl files. Should not be totaly deleted
-	images, err := GetImagesAPI(tp.Id, accessToken)
+	images, err := GetGalleriesFilesWithoutModelsPreviews(tp.Id, accessToken)
 	if err != nil {
 		return err
 	}
@@ -313,6 +313,7 @@ func (tp *Thing) DeleteAndUpdateAllImages(accessToken string, dryRun bool, debug
 	return nil
 }
 
+// @todo: to remove unused
 func (tp *Thing) UploadAllFilesAndImages(accessToken string) error {
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
@@ -329,6 +330,7 @@ func (tp *Thing) UploadAllFilesAndImages(accessToken string) error {
 	return nil
 }
 
+// @todo: to remove unused
 func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)

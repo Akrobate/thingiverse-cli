@@ -56,7 +56,7 @@ Examples:
 
 		if updateType == "info" || updateType == "all" {
 			if err := t.Update(accessToken); err != nil {
-				return err
+				return fmt.Errorf("[ERROR] Update info: %w", err)
 			}
 			fmt.Println("[OK] Update info success")
 		}
@@ -65,6 +65,11 @@ Examples:
 			if err := t.CompareAndUpdateFiles(accessToken, dryRun, debug); err != nil {
 				return err
 			}
+
+			if err := t.DeleteAndUpdateAllImages(accessToken, dryRun, debug); err != nil {
+				return err
+			}
+
 			fmt.Println("[OK] Update files success")
 		}
 

@@ -8,14 +8,17 @@ import (
 )
 
 func HttpDoAuthenticatedRequest(url string, method string, body io.Reader, accessToken string) (*http.Response, error) {
+	return HttpDoAuthenticatedRequestWithContentType(url, method, body, "application/json", accessToken)
+}
 
+func HttpDoAuthenticatedRequestWithContentType(url string, method string, body io.Reader, contentType string, accessToken string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{}
