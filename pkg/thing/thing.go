@@ -305,7 +305,10 @@ func (tp *Thing) DeleteAndUpdateAllImages(accessToken string, dryRun bool, debug
 		if utils.FileExists(item.LocalPath) {
 			err := UploadFileProcess(tp.Id, item.LocalPath, accessToken)
 			if err != nil {
+				fmt.Printf("[ERROR] %s\n", item.LocalPath)
 				return err
+			} else {
+				fmt.Printf("[OK] %s\n", item.LocalPath)
 			}
 		}
 	}
@@ -367,7 +370,7 @@ func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 }
 
 // @todo, To test
-func (tp *Thing) UpdateOrderFilesAndImage(id int, accessToken string) error {
+func (tp *Thing) UpdateOrderFilesAndImage(accessToken string) error {
 
 	type ImageFileOrderItem struct {
 		Id   int `json:"id"`

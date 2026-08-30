@@ -70,7 +70,12 @@ Examples:
 				return err
 			}
 
-			fmt.Println("[OK] Update files success")
+			fmt.Println("Applying gallery order...")
+			if err := t.UpdateOrderFilesAndImage(accessToken); err != nil {
+				return err
+			}
+
+			fmt.Println("[OK] Update files, images, order success")
 		}
 
 		return nil
