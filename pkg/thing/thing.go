@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 	"github.com/samber/lo"
@@ -45,13 +46,58 @@ func NewThing() (*Thing, error) {
 	return &Thing{}, nil
 }
 
-func (tp *Thing) Save() error {
+func (tp *Thing) OldSave() error {
 	data, err := yaml.Marshal(tp)
 	if err != nil {
 		return err
 	}
 
 	return os.WriteFile("./thingiverse.yml", data, 0644)
+}
+
+func (tp *Thing) Save() error {
+	fmt.Println("Tesssssssssssst")
+
+	type RawThing Thing
+
+	var doc yaml.Node
+	data, err := yaml.Marshal((*RawThing)(tp))
+	if err != nil {
+		return err
+	}
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return err
+	}
+
+	if len(doc.Content) > 0 && doc.Content[0].Kind == yaml.MappingNode {
+		mapping := doc.Content[0]
+		for i := 0; i < len(mapping.Content); i += 2 {
+			key := mapping.Content[i].Value
+
+			if key == "description" {
+				valNode := mapping.Content[i+1]
+
+				valNode.Value = strings.TrimSpace(tp.Description) + "\n"
+				valNode.Style = yaml.LiteralStyle
+				valNode.Tag = "!!str"
+			} else if key == "instructions" {
+				valNode := mapping.Content[i+1]
+				valNode.Value = strings.TrimSpace(tp.Instructions) + "\n"
+				valNode.Style = yaml.LiteralStyle
+				valNode.Tag = "!!str"
+			}
+		}
+	}
+
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+
+	if err := enc.Encode(&doc); err != nil {
+		return err
+	}
+
+	return os.WriteFile("./thingiverse.yml", buf.Bytes(), 0644)
 }
 
 func (tp *Thing) Load() error {
@@ -64,6 +110,37 @@ func (tp *Thing) Load() error {
 		return err
 	}
 	return nil
+}
+
+func (tp *Thing) TestttttMarshalYAML() (interface{}, error) {
+
+	type RawThing Thing
+
+	var doc yaml.Node
+	data, err := yaml.Marshal((*RawThing)(tp))
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, err
+	}
+
+	if len(doc.Content) == 0 {
+		return (*RawThing)(tp), nil
+	}
+	root := doc.Content[0]
+
+	if root.Kind == yaml.MappingNode {
+		for i := 0; i < len(root.Content); i += 2 {
+			key := root.Content[i].Value
+			if key == "description" || key == "instructions" {
+				root.Content[i+1].Style = yaml.LiteralStyle
+			}
+		}
+	}
+
+	// 5. On retourne le nœud racine sans l'en-tête de document
+	return root, nil
 }
 
 func (tp *Thing) GenerateHashFiles() error {
@@ -119,15 +196,6 @@ func (tp *Thing) Update(accessToken string) error {
 	if err := UpdateAPI(tp.Id, &updateRequest, accessToken); err != nil {
 		return fmt.Errorf("Error updating thing\n%w", err)
 	}
-
-	// @todo old method of sync files, should be deleted ?
-	// if err := tp.DeleteAllFilesAndImages(accessToken); err != nil {
-	// 	return fmt.Errorf("Error updating thing\n%w", err)
-	// }
-
-	// if err := tp.UploadAllFilesAndImages(accessToken); err != nil {
-	// 	return fmt.Errorf("Error updating thing\n%w", err)
-	// }
 
 	return nil
 }
@@ -369,7 +437,6 @@ func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
 	return nil
 }
 
-// @todo, To test
 func (tp *Thing) UpdateOrderFilesAndImage(accessToken string) error {
 
 	type ImageFileOrderItem struct {
@@ -444,17 +511,28 @@ func (tp *Thing) UpdateOrderFilesAndImage(accessToken string) error {
 }
 
 // @todo: recode
-func (tp *Thing) Create(accessToken string) (int, error) {
+func (tp *Thing) Create(accessToken string) error {
 
+	if err := tp.Load(); err != nil {
+		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
+	}
+
+	if tp.Id == 0 {
+		fmt.Println("ID is 0")
+	} else {
+		fmt.Println("ID is setted")
+	}
+
+	return nil
 	jsonData, err := json.Marshal(tp)
 	if err != nil {
-		return 0, fmt.Errorf("Error JSON serialize : %w", err)
+		return fmt.Errorf("Error JSON serialize : %w", err)
 	}
 
 	url := fmt.Sprintf("%s/things", apiBaseURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return 0, fmt.Errorf("Error creating request : %w", err)
+		return fmt.Errorf("Error creating request : %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
@@ -464,23 +542,23 @@ func (tp *Thing) Create(accessToken string) (int, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, fmt.Errorf("Request failed : %w", err)
+		return fmt.Errorf("Request failed : %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("API Error (HTTP %d) : %s", resp.StatusCode, string(bodyBytes))
+		return fmt.Errorf("API Error (HTTP %d) : %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var thingResp ThingResponse
 	if err := json.NewDecoder(resp.Body).Decode(&thingResp); err != nil {
-		return 0, fmt.Errorf("Parse response problem : %w", err)
+		return fmt.Errorf("Parse response problem : %w", err)
 	}
 
 	tp.Id = thingResp.ID
 
-	return thingResp.ID, nil
+	return tp.Save()
 }
 
 func (tp *Thing) AutosetFilesAndImages(rootDir string, mode string) error {
