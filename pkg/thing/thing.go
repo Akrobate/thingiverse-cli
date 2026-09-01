@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	"github.com/Akrobate/thingiverse-cli/pkg/utils"
 	"github.com/samber/lo"
@@ -46,62 +45,8 @@ func NewThing() (*Thing, error) {
 	return &Thing{}, nil
 }
 
-func (tp *Thing) OldSave() error {
-	data, err := yaml.Marshal(tp)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile("./thingiverse.yml", data, 0644)
-}
-
-func (tp *Thing) Save() error {
-	fmt.Println("Tesssssssssssst")
-
-	type RawThing Thing
-
-	var doc yaml.Node
-	data, err := yaml.Marshal((*RawThing)(tp))
-	if err != nil {
-		return err
-	}
-	if err := yaml.Unmarshal(data, &doc); err != nil {
-		return err
-	}
-
-	if len(doc.Content) > 0 && doc.Content[0].Kind == yaml.MappingNode {
-		mapping := doc.Content[0]
-		for i := 0; i < len(mapping.Content); i += 2 {
-			key := mapping.Content[i].Value
-
-			if key == "description" {
-				valNode := mapping.Content[i+1]
-
-				valNode.Value = strings.TrimSpace(tp.Description) + "\n"
-				valNode.Style = yaml.LiteralStyle
-				valNode.Tag = "!!str"
-			} else if key == "instructions" {
-				valNode := mapping.Content[i+1]
-				valNode.Value = strings.TrimSpace(tp.Instructions) + "\n"
-				valNode.Style = yaml.LiteralStyle
-				valNode.Tag = "!!str"
-			}
-		}
-	}
-
-	var buf bytes.Buffer
-	enc := yaml.NewEncoder(&buf)
-	enc.SetIndent(2)
-
-	if err := enc.Encode(&doc); err != nil {
-		return err
-	}
-
-	return os.WriteFile("./thingiverse.yml", buf.Bytes(), 0644)
-}
-
 func (tp *Thing) Load() error {
-	data, err := os.ReadFile("./thingiverse.yml")
+	data, err := os.ReadFile(thingFileName)
 	if err != nil {
 		return err
 	}
@@ -110,37 +55,6 @@ func (tp *Thing) Load() error {
 		return err
 	}
 	return nil
-}
-
-func (tp *Thing) TestttttMarshalYAML() (interface{}, error) {
-
-	type RawThing Thing
-
-	var doc yaml.Node
-	data, err := yaml.Marshal((*RawThing)(tp))
-	if err != nil {
-		return nil, err
-	}
-	if err := yaml.Unmarshal(data, &doc); err != nil {
-		return nil, err
-	}
-
-	if len(doc.Content) == 0 {
-		return (*RawThing)(tp), nil
-	}
-	root := doc.Content[0]
-
-	if root.Kind == yaml.MappingNode {
-		for i := 0; i < len(root.Content); i += 2 {
-			key := root.Content[i].Value
-			if key == "description" || key == "instructions" {
-				root.Content[i+1].Style = yaml.LiteralStyle
-			}
-		}
-	}
-
-	// 5. On retourne le nœud racine sans l'en-tête de document
-	return root, nil
 }
 
 func (tp *Thing) GenerateHashFiles() error {
