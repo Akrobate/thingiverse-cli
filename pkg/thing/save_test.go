@@ -173,11 +173,32 @@ description: |
 	if err != nil {
 		t.Fatal(err)
 	}
-	if descriptionBlock(src) != descriptionBlock(string(out)) {
-		t.Fatalf("description block was rewritten\nwant:\n%s\ngot:\n%s", descriptionBlock(src), descriptionBlock(string(out)))
+	got := string(out)
+	if !strings.Contains(got, "description: |") {
+		t.Fatalf("description should stay a literal block, got:\n%s", got)
 	}
-	if !strings.Contains(string(out), "  - local_path: ./new.png") {
+	if strings.Contains(got, `description: "`) {
+		t.Fatalf("description should not become a quoted string, got:\n%s", got)
+	}
+	if !strings.Contains(got, "  Line with trailing space. ") {
+		t.Fatalf("trailing spaces in description should be kept, got:\n%s", got)
+	}
+	if !strings.Contains(got, "  - local_path: ./new.png") {
 		t.Fatalf("image_files was not updated, got:\n%s", out)
+	}
+	if strings.Contains(got, "name: \"\"") || strings.Contains(got, "category: 0") {
+		t.Fatalf("zero-value fields missing from the file should not be appended, got:\n%s", got)
+	}
+
+	reloaded, err := NewThing()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := reloaded.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Description != tp.Description {
+		t.Fatalf("description content changed\nwant: %q\ngot:  %q", tp.Description, reloaded.Description)
 	}
 }
 
@@ -209,10 +230,27 @@ func TestSaveRewritesDescriptionAsLiteralBlock(t *testing.T) {
 	}
 }
 
-func descriptionBlock(yamlText string) string {
-	idx := strings.Index(yamlText, "description:")
-	if idx < 0 {
-		return ""
+func TestMarshalYAMLDoesNotDependOnThingFields(t *testing.T) {
+	type sample struct {
+		Title string   `yaml:"title"`
+		Notes string   `yaml:"notes"`
+		Items []string `yaml:"items"`
 	}
-	return yamlText[idx:]
+
+	out, err := marshalYAML(&sample{
+		Title: "demo",
+		Notes: "line 1\n\nline 2\n",
+		Items: []string{"one", "two"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(out)
+	if !strings.Contains(got, "notes: |") {
+		t.Fatalf("generic marshal should use literal blocks, got:\n%s", got)
+	}
+	if !strings.Contains(got, "  - one") || !strings.Contains(got, "  - two") {
+		t.Fatalf("generic marshal should use block lists, got:\n%s", got)
+	}
 }
+

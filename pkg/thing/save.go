@@ -2,9 +2,7 @@ package thing
 
 import (
 	"bytes"
-	"fmt"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -13,382 +11,257 @@ import (
 
 const thingFileName = "./thingiverse.yml"
 
-var thingFieldOrder = []string{
-	"id",
-	"name",
-	"category",
-	"license",
-	"is_wip",
-	"tags",
-	"image_files",
-	"model_files",
-	"instructions",
-	"description",
-}
-
 func (tp *Thing) Save() error {
-	original, err := os.ReadFile(thingFileName)
-	if err != nil && !os.IsNotExist(err) {
+	node, err := toYAMLNode(tp)
+	if err != nil {
 		return err
 	}
-
-	var out string
-	if err != nil || len(bytes.TrimSpace(original)) == 0 {
-		out = renderThingFile(tp)
-	} else {
-		out, err = patchThingFile(original, tp)
-		if err != nil {
-			return err
-		}
+	if previous, err := readYAMLNode(thingFileName); err == nil {
+		mergeMapping(previous, node)
+		node = previous
 	}
-
-	if !strings.HasSuffix(out, "\n") {
-		out += "\n"
-	}
-
-	return os.WriteFile(thingFileName, []byte(out), 0644)
+	return os.WriteFile(thingFileName, renderYAML(node), 0644)
 }
 
-func patchThingFile(original []byte, tp *Thing) (string, error) {
-	var existing Thing
-	if err := yaml.Unmarshal(original, &existing); err != nil {
-		return "", err
+// marshalYAML encodes any value as YAML. Multiline strings use a literal
+// block (`|`), empty strings stay `""`, and collections stay in block style.
+func marshalYAML(v any) ([]byte, error) {
+	node, err := toYAMLNode(v)
+	if err != nil {
+		return nil, err
 	}
+	return renderYAML(node), nil
+}
 
+func renderYAML(node *yaml.Node) []byte {
+	var buf bytes.Buffer
+	writeNode(&buf, node, 0)
+	if buf.Len() == 0 || buf.Bytes()[buf.Len()-1] != '\n' {
+		buf.WriteByte('\n')
+	}
+	return buf.Bytes()
+}
+
+func toYAMLNode(v any) (*yaml.Node, error) {
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return parseYAMLNode(data)
+}
+
+func readYAMLNode(path string) (*yaml.Node, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if len(bytes.TrimSpace(data)) == 0 {
+		return nil, os.ErrNotExist
+	}
+	return parseYAMLNode(data)
+}
+
+func parseYAMLNode(data []byte) (*yaml.Node, error) {
 	var doc yaml.Node
-	if err := yaml.Unmarshal(original, &doc); err != nil {
-		return "", err
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, err
 	}
-	if len(doc.Content) == 0 || doc.Content[0].Kind != yaml.MappingNode {
-		return "", fmt.Errorf("%s root is not a mapping", thingFileName)
+	if len(doc.Content) == 0 {
+		return &yaml.Node{Kind: yaml.MappingNode}, nil
+	}
+	return doc.Content[0], nil
+}
+
+func mergeMapping(dst, src *yaml.Node) {
+	if dst.Kind != yaml.MappingNode || src.Kind != yaml.MappingNode {
+		*dst = *src
+		return
 	}
 
-	replacements := map[string]string{}
-	for _, key := range changedKeys(&existing, tp) {
-		replacements[key] = renderField(key, tp)
+	index := map[string]int{}
+	for i := 0; i+1 < len(dst.Content); i += 2 {
+		index[dst.Content[i].Value] = i
 	}
 
-	missing := missingKeys(doc.Content[0])
-	for _, key := range missing {
-		if _, already := replacements[key]; already {
+	for i := 0; i+1 < len(src.Content); i += 2 {
+		key := src.Content[i].Value
+		if j, ok := index[key]; ok {
+			if !nodesEqual(dst.Content[j+1], src.Content[i+1]) {
+				dst.Content[j+1] = src.Content[i+1]
+			}
 			continue
 		}
-		if isZeroField(key, tp) {
+		if isZeroNode(src.Content[i+1]) {
 			continue
 		}
-		replacements[key] = renderField(key, tp)
+		dst.Content = append(dst.Content, src.Content[i], src.Content[i+1])
 	}
-
-	if len(replacements) == 0 {
-		return string(original), nil
-	}
-
-	return applyReplacements(string(original), doc.Content[0], replacements)
 }
 
-func changedKeys(old, new *Thing) []string {
-	var keys []string
-	if old.Id != new.Id {
-		keys = append(keys, "id")
-	}
-	if old.Name != new.Name {
-		keys = append(keys, "name")
-	}
-	if old.Category != new.Category {
-		keys = append(keys, "category")
-	}
-	if old.License != new.License {
-		keys = append(keys, "license")
-	}
-	if old.IsWip != new.IsWip {
-		keys = append(keys, "is_wip")
-	}
-	if !stringSlicesEqual(old.Tags, new.Tags) {
-		keys = append(keys, "tags")
-	}
-	if !filesEqual(old.ImageFiles, new.ImageFiles) {
-		keys = append(keys, "image_files")
-	}
-	if !filesEqual(old.ModelFiles, new.ModelFiles) {
-		keys = append(keys, "model_files")
-	}
-	if old.Instructions != new.Instructions {
-		keys = append(keys, "instructions")
-	}
-	if old.Description != new.Description {
-		keys = append(keys, "description")
-	}
-	return keys
-}
-
-func missingKeys(mapping *yaml.Node) []string {
-	present := map[string]bool{}
-	for i := 0; i < len(mapping.Content)-1; i += 2 {
-		present[mapping.Content[i].Value] = true
-	}
-	var keys []string
-	for _, key := range thingFieldOrder {
-		if !present[key] {
-			keys = append(keys, key)
+func isZeroNode(n *yaml.Node) bool {
+	switch n.Kind {
+	case yaml.SequenceNode, yaml.MappingNode:
+		return len(n.Content) == 0
+	case yaml.ScalarNode:
+		switch n.Tag {
+		case "!!str", "!":
+			return n.Value == ""
+		case "!!bool":
+			return n.Value == "false"
+		case "!!int", "!!float":
+			return n.Value == "0" || n.Value == "0.0"
+		default:
+			return n.Value == "" || n.Value == "0" || n.Value == "false" || n.Value == "null" || n.Value == "~"
 		}
-	}
-	return keys
-}
-
-func isZeroField(key string, tp *Thing) bool {
-	switch key {
-	case "id", "category":
-		return fieldInt(key, tp) == 0
-	case "is_wip":
-		return !tp.IsWip
-	case "tags":
-		return len(tp.Tags) == 0
-	case "image_files":
-		return len(tp.ImageFiles) == 0
-	case "model_files":
-		return len(tp.ModelFiles) == 0
 	default:
-		return fieldString(key, tp) == ""
+		return n.Value == ""
 	}
 }
 
-func stringSlicesEqual(a, b []string) bool {
-	if len(a) != len(b) {
+func nodesEqual(a, b *yaml.Node) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	if a.Kind != b.Kind || a.Value != b.Value || len(a.Content) != len(b.Content) {
 		return false
 	}
-	for i := range a {
-		if a[i] != b[i] {
+	for i := range a.Content {
+		if !nodesEqual(a.Content[i], b.Content[i]) {
 			return false
 		}
 	}
 	return true
 }
 
-func filesEqual(a, b []ThingFile) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i].LocalPath != b[i].LocalPath {
-			return false
+func writeNode(b *bytes.Buffer, n *yaml.Node, indent int) {
+	switch n.Kind {
+	case yaml.MappingNode:
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			writeIndent(b, indent)
+			writeScalar(b, n.Content[i], indent)
+			b.WriteByte(':')
+			writeFieldValue(b, n.Content[i+1], indent)
+		}
+	case yaml.SequenceNode:
+		writeSeq(b, n, indent)
+	default:
+		writeIndent(b, indent)
+		if writeScalar(b, n, indent) {
+			b.WriteByte('\n')
 		}
 	}
-	return true
 }
 
-type keySpan struct {
-	name  string
-	start int
-	end   int
-}
-
-func topLevelSpans(mapping *yaml.Node, lineCount int) []keySpan {
-	var keys []keySpan
-	for i := 0; i < len(mapping.Content)-1; i += 2 {
-		k := mapping.Content[i]
-		keys = append(keys, keySpan{name: k.Value, start: k.Line})
-	}
-	for i := range keys {
-		if i+1 < len(keys) {
-			keys[i].end = keys[i+1].start - 1
-		} else {
-			keys[i].end = lineCount
+func writeFieldValue(b *bytes.Buffer, n *yaml.Node, indent int) {
+	switch n.Kind {
+	case yaml.MappingNode:
+		if len(n.Content) == 0 {
+			b.WriteString(" {}\n")
+			return
+		}
+		b.WriteByte('\n')
+		writeNode(b, n, indent+1)
+	case yaml.SequenceNode:
+		if len(n.Content) == 0 {
+			b.WriteString(" []\n")
+			return
+		}
+		b.WriteByte('\n')
+		writeSeq(b, n, indent+1)
+	default:
+		b.WriteByte(' ')
+		if writeScalar(b, n, indent) {
+			b.WriteByte('\n')
 		}
 	}
-	return keys
 }
 
-func applyReplacements(original string, mapping *yaml.Node, replacements map[string]string) (string, error) {
-	lines := strings.Split(strings.ReplaceAll(original, "\r\n", "\n"), "\n")
-	spans := topLevelSpans(mapping, len(lines))
-
-	type op struct {
-		start int
-		end   int
-		text  string
-	}
-	var ops []op
-	var appends []string
-
-	for key, rendered := range replacements {
-		found := false
-		for _, span := range spans {
-			if span.name != key {
+func writeSeq(b *bytes.Buffer, n *yaml.Node, indent int) {
+	for _, item := range n.Content {
+		writeIndent(b, indent)
+		b.WriteByte('-')
+		switch item.Kind {
+		case yaml.MappingNode:
+			if len(item.Content) == 0 {
+				b.WriteString(" {}\n")
 				continue
 			}
-			end := span.end
-			for end >= span.start && strings.TrimSpace(lines[end-1]) == "" {
-				end--
+			b.WriteByte(' ')
+			writeScalar(b, item.Content[0], indent)
+			b.WriteByte(':')
+			writeFieldValue(b, item.Content[1], indent+1)
+			for i := 2; i+1 < len(item.Content); i += 2 {
+				writeIndent(b, indent+1)
+				writeScalar(b, item.Content[i], indent)
+				b.WriteByte(':')
+				writeFieldValue(b, item.Content[i+1], indent+1)
 			}
-			ops = append(ops, op{start: span.start, end: end, text: rendered})
-			found = true
-			break
-		}
-		if !found {
-			appends = append(appends, rendered)
-		}
-	}
-
-	sort.Slice(ops, func(i, j int) bool { return ops[i].start < ops[j].start })
-
-	var out []string
-	cursor := 1
-	for _, op := range ops {
-		if op.start < 1 || op.end > len(lines) || op.start > op.end {
-			return "", fmt.Errorf("invalid YAML span for rewrite")
-		}
-		out = append(out, lines[cursor-1:op.start-1]...)
-		out = append(out, strings.Split(op.text, "\n")...)
-		cursor = op.end + 1
-	}
-	if cursor <= len(lines) {
-		out = append(out, lines[cursor-1:]...)
-	}
-
-	result := strings.Join(out, "\n")
-	if len(appends) > 0 {
-		sort.Slice(appends, func(i, j int) bool {
-			return fieldOrderIndex(appends[i]) < fieldOrderIndex(appends[j])
-		})
-		if !strings.HasSuffix(result, "\n") {
-			result += "\n"
-		}
-		result += strings.Join(appends, "\n") + "\n"
-	}
-	return result, nil
-}
-
-func fieldOrderIndex(rendered string) int {
-	key := rendered
-	if i := strings.IndexByte(rendered, ':'); i >= 0 {
-		key = rendered[:i]
-	}
-	for i, name := range thingFieldOrder {
-		if name == key {
-			return i
+		case yaml.SequenceNode:
+			if len(item.Content) == 0 {
+				b.WriteString(" []\n")
+				continue
+			}
+			b.WriteByte('\n')
+			writeSeq(b, item, indent+1)
+		default:
+			b.WriteByte(' ')
+			if writeScalar(b, item, indent) {
+				b.WriteByte('\n')
+			}
 		}
 	}
-	return len(thingFieldOrder)
 }
 
-func renderThingFile(tp *Thing) string {
-	parts := make([]string, 0, len(thingFieldOrder))
-	for _, key := range thingFieldOrder {
-		parts = append(parts, renderField(key, tp))
+func writeScalar(b *bytes.Buffer, n *yaml.Node, indent int) bool {
+	if isYAMLString(n) {
+		switch {
+		case n.Value == "":
+			b.WriteString(`""`)
+			return true
+		case strings.Contains(n.Value, "\n"):
+			writeLiteral(b, n.Value, indent)
+			return false
+		case needsQuote(n.Value):
+			b.WriteString(strconv.Quote(n.Value))
+			return true
+		}
 	}
-	return strings.Join(parts, "\n") + "\n"
+	b.WriteString(n.Value)
+	return true
 }
 
-func renderField(key string, tp *Thing) string {
-	switch key {
-	case "id", "category":
-		return fmt.Sprintf("%s: %d", key, fieldInt(key, tp))
-	case "is_wip":
-		return fmt.Sprintf("is_wip: %t", tp.IsWip)
-	case "tags":
-		return renderStringList("tags", tp.Tags)
-	case "image_files":
-		return renderFileList("image_files", tp.ImageFiles)
-	case "model_files":
-		return renderFileList("model_files", tp.ModelFiles)
-	default:
-		return renderStringField(key, fieldString(key, tp))
-	}
-}
-
-func fieldInt(key string, tp *Thing) int {
-	if key == "category" {
-		return tp.Category
-	}
-	return tp.Id
-}
-
-func fieldString(key string, tp *Thing) string {
-	switch key {
-	case "name":
-		return tp.Name
-	case "license":
-		return tp.License
-	case "instructions":
-		return tp.Instructions
-	case "description":
-		return tp.Description
-	default:
-		return ""
-	}
-}
-
-func renderStringField(key, value string) string {
-	if value == "" {
-		return key + `: ""`
-	}
-	if strings.Contains(value, "\n") {
-		return renderLiteralField(key, value)
-	}
-	if needsQuote(value) {
-		return key + ": " + strconv.Quote(value)
-	}
-	return key + ": " + value
-}
-
-func renderLiteralField(key, value string) string {
-	chomp := "|"
+func writeLiteral(b *bytes.Buffer, value string, indent int) {
+	marker := "|"
 	body := value
 	if strings.HasSuffix(value, "\n") {
 		body = strings.TrimSuffix(value, "\n")
 	} else {
-		chomp = "|-"
+		marker = "|-"
 	}
 
-	var b strings.Builder
-	b.WriteString(key)
-	b.WriteString(": ")
-	b.WriteString(chomp)
+	b.WriteString(marker)
 	b.WriteByte('\n')
+	pad := strings.Repeat("  ", indent+1)
 	for _, line := range strings.Split(body, "\n") {
-		b.WriteString("  ")
+		b.WriteString(pad)
 		b.WriteString(line)
 		b.WriteByte('\n')
 	}
-	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func renderStringList(key string, items []string) string {
-	if len(items) == 0 {
-		return key + ": []"
-	}
-	var b strings.Builder
-	b.WriteString(key)
-	b.WriteString(":\n")
-	for _, item := range items {
-		b.WriteString("  - ")
-		if needsQuote(item) {
-			b.WriteString(strconv.Quote(item))
-		} else {
-			b.WriteString(item)
-		}
-		b.WriteByte('\n')
-	}
-	return strings.TrimSuffix(b.String(), "\n")
+func writeIndent(b *bytes.Buffer, indent int) {
+	b.WriteString(strings.Repeat("  ", indent))
 }
 
-func renderFileList(key string, files []ThingFile) string {
-	if len(files) == 0 {
-		return key + ": []"
+func isYAMLString(n *yaml.Node) bool {
+	switch n.Tag {
+	case "!!str", "!":
+		return true
+	case "":
+		return n.Style&(yaml.DoubleQuotedStyle|yaml.SingleQuotedStyle|yaml.LiteralStyle|yaml.FoldedStyle) != 0
+	default:
+		return false
 	}
-	var b strings.Builder
-	b.WriteString(key)
-	b.WriteString(":\n")
-	for _, file := range files {
-		b.WriteString("  - local_path: ")
-		if needsQuote(file.LocalPath) {
-			b.WriteString(strconv.Quote(file.LocalPath))
-		} else {
-			b.WriteString(file.LocalPath)
-		}
-		b.WriteByte('\n')
-	}
-	return strings.TrimSuffix(b.String(), "\n")
 }
 
 func needsQuote(s string) bool {
