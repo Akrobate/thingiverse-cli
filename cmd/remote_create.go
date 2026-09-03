@@ -61,7 +61,6 @@ Examples:
 			fmt.Println("[OK] Update info success")
 		}
 
-		return nil
 		if updateType == "files" || updateType == "all" {
 			if err := t.CompareAndUpdateFiles(accessToken, dryRun, debug); err != nil {
 				return err
@@ -76,7 +75,7 @@ Examples:
 				return err
 			}
 
-			fmt.Println("[OK] Update files, images, order success")
+			fmt.Println("[OK] Created files, images, order success")
 		}
 
 		return nil

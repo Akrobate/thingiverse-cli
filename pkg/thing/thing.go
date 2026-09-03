@@ -424,20 +424,16 @@ func (tp *Thing) UpdateOrderFilesAndImage(accessToken string) error {
 	return nil
 }
 
-// @todo: recode
 func (tp *Thing) Create(accessToken string) error {
 
 	if err := tp.Load(); err != nil {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
 
-	if tp.Id == 0 {
-		fmt.Println("ID is 0")
-	} else {
-		fmt.Println("ID is setted")
+	if tp.Id != 0 {
+		return fmt.Errorf("ID is setted, please use update command")
 	}
 
-	return nil
 	jsonData, err := json.Marshal(tp)
 	if err != nil {
 		return fmt.Errorf("Error JSON serialize : %w", err)
