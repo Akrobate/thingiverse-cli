@@ -98,6 +98,10 @@ func (tp *Thing) Update(accessToken string) error {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
 
+	if tp.Id == 0 {
+		return fmt.Errorf("thingiverse.yml doesn't have ID. Create thing first")
+	}
+
 	updateRequest := ThingUpdateRequest{
 		Name:        tp.Name,
 		Category:    tp.Category,
@@ -295,59 +299,6 @@ func (tp *Thing) DeleteAndUpdateAllImages(accessToken string, dryRun bool, debug
 		}
 	}
 
-	return nil
-}
-
-// @todo: to remove unused
-func (tp *Thing) UploadAllFilesAndImages(accessToken string) error {
-	if err := tp.Load(); err != nil {
-		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
-	}
-	fmt.Println("Upload image files / model files")
-	for _, item := range append(tp.ImageFiles, tp.ModelFiles...) {
-		if utils.FileExists(item.LocalPath) {
-			err := UploadFileProcess(tp.Id, item.LocalPath, accessToken)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// @todo: to remove unused
-func (tp *Thing) DeleteAllFilesAndImages(accessToken string) error {
-	if err := tp.Load(); err != nil {
-		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
-	}
-
-	fmt.Println("Deleting images")
-	images, err := GetImagesAPI(tp.Id, accessToken)
-	if err != nil {
-		return err
-	}
-	for _, item := range *images {
-		err := DeleteImageAPI(item.Id, tp.Id, accessToken)
-		if err != nil {
-			fmt.Printf("[ERROR] %d\t %s %w\n", item.Id, item.Name, err)
-		} else {
-			fmt.Printf("[DELETED] %d\t %s\n", item.Id, item.Name)
-		}
-	}
-
-	fmt.Println("Deleting files")
-	files, err := GetFilesAPI(tp.Id, accessToken)
-	if err != nil {
-		return err
-	}
-	for _, item := range *files {
-		err := DeleteFileAPI(item.Id, tp.Id, accessToken)
-		if err != nil {
-			fmt.Printf("[ERROR] %d\t %s %w\n", item.Id, item.Name, err)
-		} else {
-			fmt.Printf("[DELETED] %d\t %s\n", item.Id, item.Name)
-		}
-	}
 	return nil
 }
 
