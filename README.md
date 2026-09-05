@@ -29,6 +29,28 @@ The init command create an empty `thingiverse.yml` file in your project, once cr
 thingiverse-cli init
 ```
 
+### check
+
+Check `thingiverse.yml` file. The file should have all required fields correctly setted, and images and files should exists in the curent path.
+
+```bash
+thingiverse-cli thing check
+```
+
+### create
+
+@todo
+
+
+### update
+
+@todo
+
+
+### upsert
+
+@todo
+
 ### View categories referential
 
 Show the possible values for categories
