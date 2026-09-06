@@ -314,7 +314,10 @@ func (tp *Thing) UpdateOrderFilesAndImage(accessToken string) error {
 		Images []ImageFileOrderItem `json:"images"`
 	}
 
-	var request ThingFileImageOrderUpdateRequest
+	request := ThingFileImageOrderUpdateRequest{
+		Files:  []ImageFileOrderItem{},
+		Images: []ImageFileOrderItem{},
+	}
 
 	images, err := GetGalleriesFilesWithoutModelsPreviews(tp.Id, accessToken)
 	files, err := GetFilesAPI(tp.Id, accessToken)
