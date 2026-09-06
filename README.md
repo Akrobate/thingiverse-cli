@@ -37,19 +37,38 @@ Check `thingiverse.yml` file. The file should have all required fields correctly
 thingiverse-cli thing check
 ```
 
-### create
+### Uploading methods
 
-@todo
+Accepts one of params
 
+- **info** - updates only data from `thingiverse.yml` to thingiverse.com
+- **files** - updates all files and galleries declared in `thingiverse.yml`
+- **all** - same thing as info followed by files
 
-### update
+#### create
 
-@todo
+Upload a new thing to `thingiverse.com`. New file must have unknown `id` property in `thingiverse.yml`
 
+```bash
+thingiverse-cli remote create all
+```
 
-### upsert
+#### update
 
-@todo
+Update data from thing to `thingiverse.com`. `id` property in `thingiverse.yml` must be setted and thing must exists ont thingiverse.com
+
+```bash
+thingiverse-cli remote update all
+```
+
+#### upsert
+
+Same as update or create. The command choose automaticly between create and update conditionned by existence of id property in `thingiverse.yml`
+
+```bash
+thingiverse-cli remote upsert all
+```
+
 
 ### View categories referential
 
