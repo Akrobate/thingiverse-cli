@@ -185,8 +185,3 @@ description: |
 ```
 
 ## Todo
-
-- [X] Init empty thingiverse.yml File command line
-- [X] Search tags command line
-- [ ] Reorder galleries images
-- [ ] Reorder Files

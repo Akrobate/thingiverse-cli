@@ -73,22 +73,27 @@ func (tp *Thing) CheckFilesExists() error {
 		return fmt.Errorf("Cannot load thingiverse.yml file in current folder \n%w", err)
 	}
 
-	fmt.Println("Image files")
+	errMessage := ""
+	hadError := false
+
 	for _, item := range tp.ImageFiles {
-		if utils.FileExists(item.LocalPath) {
-			fmt.Printf("[OK]\t%s\n", item.LocalPath)
-		} else {
-			fmt.Printf("[ERROR]\t%s\n", item.LocalPath)
+		if !utils.FileExists(item.LocalPath) {
+			hadError = true
+			errMessage = errMessage + fmt.Sprintf("[ERROR]\t%s\n", item.LocalPath)
 		}
 	}
-	fmt.Println("Model files")
+
 	for _, item := range tp.ModelFiles {
-		if utils.FileExists(item.LocalPath) {
-			fmt.Printf("[OK]\t%s\n", item.LocalPath)
-		} else {
-			fmt.Printf("[ERROR]\t%s\n", item.LocalPath)
+		if !utils.FileExists(item.LocalPath) {
+			hadError = true
+			errMessage = errMessage + fmt.Sprintf("[ERROR]\t%s\n", item.LocalPath)
 		}
 	}
+
+	if hadError {
+		return fmt.Errorf(errMessage)
+	}
+
 	return nil
 }
 
