@@ -18,7 +18,7 @@ type SubCategoryGetResponse struct {
 	Children []CategoryGetResponse `json:"children"`
 }
 
-func CategorySearch(accessToken string) (*[]CategoryGetResponse, error) {
+func CategorySearchAPI(accessToken string) (*[]CategoryGetResponse, error) {
 
 	url := fmt.Sprintf("%s/categories", apiBaseURL)
 	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)
@@ -35,7 +35,7 @@ func CategorySearch(accessToken string) (*[]CategoryGetResponse, error) {
 	return &t, nil
 }
 
-func SubCategorySearch(slug string, accessToken string) (*SubCategoryGetResponse, error) {
+func SubCategorySearchAPI(slug string, accessToken string) (*SubCategoryGetResponse, error) {
 
 	url := fmt.Sprintf("%s/categories/%s", apiBaseURL, slug)
 	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)

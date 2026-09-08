@@ -12,7 +12,7 @@ type TagGetResponse struct {
 	TagCount int    `json:"tag_count"`
 }
 
-func TagSearch(searchString string, accessToken string) (*[]TagGetResponse, error) {
+func TagSearchAPI(searchString string, accessToken string) (*[]TagGetResponse, error) {
 
 	url := fmt.Sprintf("%s/tags/%s/search-tags", apiBaseURL, searchString)
 	resp, err := utils.HttpDoAuthenticatedGetRequest(url, accessToken)

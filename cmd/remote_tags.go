@@ -29,7 +29,7 @@ Examples:
 			searchString = args[0]
 		}
 
-		resp, err := thing.TagSearch(searchString, accessToken)
+		resp, err := thing.TagSearchAPI(searchString, accessToken)
 		if err != nil {
 			return fmt.Errorf("Failed to Tags: %w", err)
 		}

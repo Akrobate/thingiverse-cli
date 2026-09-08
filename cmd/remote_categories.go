@@ -24,7 +24,7 @@ Examples:
 			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
-		resp, err := thing.CategorySearch(accessToken)
+		resp, err := thing.CategorySearchAPI(accessToken)
 		if err != nil {
 			return fmt.Errorf("Failed to CategorySearch: %w", err)
 		}
@@ -34,7 +34,7 @@ Examples:
 		for _, item := range *resp {
 			fmt.Printf("%d\t%s (%d)\n", item.Id, item.Name, item.Count)
 
-			subcategory_resp, err := thing.SubCategorySearch(item.Slug, accessToken)
+			subcategory_resp, err := thing.SubCategorySearchAPI(item.Slug, accessToken)
 			if err != nil {
 				return fmt.Errorf("Failed to CategorySearch: %w", err)
 			}
