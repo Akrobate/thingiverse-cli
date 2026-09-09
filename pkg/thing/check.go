@@ -18,21 +18,31 @@ func (tp *Thing) CheckThingParams() error {
 	// 	Instructions string      `json:"instructions" yaml:"instructions"`
 	// 	Description  string      `json:"description" yaml:"description"`
 
+	errMessage := ""
+	hadError := false
+
 	if strings.TrimSpace(tp.Name) == "" {
-		return fmt.Errorf("Name is required")
+		hadError = true
+		errMessage = errMessage + fmt.Sprintf("Name is required")
 	}
 
 	if tp.Category == 0 {
-		return fmt.Errorf("Category is required")
+		hadError = true
+		errMessage = errMessage + fmt.Sprintf("Category is required")
 	}
 
 	if strings.TrimSpace(tp.License) == "" {
-		return fmt.Errorf("License is required")
+		hadError = true
+		errMessage = errMessage + fmt.Sprintf("License is required")
 	}
 
 	if strings.TrimSpace(tp.Description) == "" {
-		return fmt.Errorf("Description is required")
+		hadError = true
+		errMessage = errMessage + fmt.Sprintf("Description is required")
 	}
 
+	if hadError {
+		return fmt.Errorf(errMessage)
+	}
 	return nil
 }

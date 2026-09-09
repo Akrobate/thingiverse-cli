@@ -30,7 +30,6 @@ Examples:
 			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 
-		// @todo check if all params are checked in once or at the first it exits
 		if err := t.CheckThingParams(); err != nil {
 			return fmt.Errorf("Bad param in thingiverse configuration file: %w", err)
 		}
