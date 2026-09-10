@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/Akrobate/thingiverse-cli/pkg/thing"
@@ -9,8 +10,8 @@ import (
 
 var remoteGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "get remote thing",
-	Long: `get remote thing
+	Short: "thingiverse-cli remote get thingiverse_id",
+	Long: `thingiverse-cli remote get thingiverse_id
 
 Examples:
   thingiverse-cli remote get 123456
@@ -24,15 +25,14 @@ Examples:
 			return fmt.Errorf("failed to retrieve access_token: %w", err)
 		}
 
-		fmt.Println(args)
+		resp, err := thing.GetApi(args[0], accessToken)
+		data, err := json.MarshalIndent(resp, "", "  ")
+		if err != nil {
+			fmt.Printf("Erreur d'affichage : %v\n", err)
+		} else {
+			fmt.Println(string(data))
+		}
 
-		resp, err := thing.Get(args[0], accessToken)
-
-		fmt.Println("------ ERROR -------")
-		fmt.Println(err)
-		fmt.Println("------ /ERROR -------")
-		fmt.Println(resp)
-		fmt.Printf("%#v\n", resp)
 		return nil
 	},
 }

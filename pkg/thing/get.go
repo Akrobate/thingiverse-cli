@@ -23,7 +23,7 @@ type ThingTagGetResponse struct {
 	Tag  string `json:"tag"`
 }
 
-func Get(id string, accessToken string) (*ThingGetResponse, error) {
+func GetApi(id string, accessToken string) (*ThingGetResponse, error) {
 
 	url := fmt.Sprintf("%s/things/%s", apiBaseURL, id)
 
